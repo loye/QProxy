@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace QProxy
+namespace Q.Http
 {
     public abstract class HttpHeader : IEnumerable<HttpHeaderItem>
     {

@@ -7,7 +7,7 @@
     <ProjectGuid>{C07CA157-FEAA-4CE4-AF80-B489E318553D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>QProxy</RootNamespace>
+    <RootNamespace>Q.Proxy</RootNamespace>
     <AssemblyName>QProxy</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -45,10 +45,17 @@
     <Compile Include="Http\HttpHeader.cs" />
     <Compile Include="Http\HttpHeaderItem.cs" />
     <Compile Include="Http\HttpPackage.cs" />
+    <Compile Include="Http\HttpReader.cs" />
     <Compile Include="Http\HttpRequestHeader.cs" />
     <Compile Include="Http\HttpResponseHeader.cs" />
+    <Compile Include="Http\HttpsStream.cs" />
+    <Compile Include="Http\HttpStream.cs" />
+    <Compile Include="Listener.cs" />
+    <Compile Include="Logger.cs" />
+    <Compile Include="Repeater.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="QTransporter.cs" />
+    <Compile Include="Transporter.cs" />
+    <Compile Include="Http\_Constants.cs" />
     <Compile Include="_Constants.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace QProxy
+namespace Q.Proxy
 {
     public class EncryptionProvider
     {

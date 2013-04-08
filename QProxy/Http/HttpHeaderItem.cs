@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace QProxy
+namespace Q.Http
 {
     public class HttpHeaderItem
     {

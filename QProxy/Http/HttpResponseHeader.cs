@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace QProxy
+namespace Q.Http
 {
     public class HttpResponseHeader : HttpHeader
     {
