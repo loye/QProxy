@@ -8,7 +8,7 @@ namespace Q.Http
     public abstract class HttpHeader : IEnumerable<HttpHeaderItem>
     {
         private static readonly Regex REGEX_HEADER = new Regex(
-           @"(?:^(?<request>(?<method>[A-Z]+)\s(?<url>(?:(?<schema>\w+)\://)?(?<host>[^/: ]+)?(?:\:(?<port>\d+))?\S*)\s(?<version>.*)\r\n)|^(?<response>(?<version>HTTP\S+)\s(?<status>(?<code>\d+).*)\r\n))(?:(?<key>[\w\-]+):\s?(?<value>.*)\r\n)*\r\n",
+           @"(?:^(?<request>(?<method>[A-Z]+)\s(?<url>(?:(?<schema>\w+)\://)?(?<host>[^/: ]+)?(?:\:(?<port>\d+))?\S*)\s(?<version>.*)\r\n)|^(?<response>(?<version>HTTP\S+)\s(?<statusCode>\d+)\s(?<status>.*)\r\n))(?:(?<key>[\w\-]+):\s?(?<value>.*)\r\n)*\r\n",
            RegexOptions.Compiled);
 
         protected string m_rawString;
@@ -126,7 +126,7 @@ namespace Q.Http
                 else if (match.Groups["response"].Success)
                 {
                     httpHeader = new HttpResponseHeader(
-                        int.Parse(match.Groups["code"].Value),
+                        int.Parse(match.Groups["statusCode"].Value),
                         match.Groups["status"].Value,
                         match.Groups["version"].Value);
                 }

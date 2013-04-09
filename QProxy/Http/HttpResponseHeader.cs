@@ -12,7 +12,7 @@ namespace Q.Http
         {
             get
             {
-                return String.Format("{0} {1}\r\n", this.Status, this.Version);
+                return String.Format("{0} {1} {2}\r\n", this.Version, this.StatusCode, this.Status);
             }
         }
 

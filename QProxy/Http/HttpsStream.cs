@@ -30,10 +30,9 @@ namespace Q.Http
         {
             SslStream ssltream = null;
             if (connectToProxy)
-            {
+            {                
                 HttpRequestHeader connectHeader = new HttpRequestHeader(HttpMethod.Connect, host, port);
-                HttpPackage connectPackage = new HttpPackage(connectHeader, HttpContent.Empty);
-                byte[] requestBin = connectPackage.ToBinary();
+                byte[] requestBin = connectHeader.ToBinary();
                 stream.Write(requestBin, 0, requestBin.Length);
                 HttpPackage response = new HttpReader().Read(stream);
                 if (response == null || (response.HttpHeader as HttpResponseHeader).StatusCode != 200)

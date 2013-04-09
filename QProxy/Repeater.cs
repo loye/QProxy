@@ -30,8 +30,17 @@ namespace Q.Proxy
             bool byProxy = this.Proxy != null;
             IPEndPoint endPoint = byProxy ? this.Proxy : new IPEndPoint(DnsHelper.GetHostAddress(host), port);
             Stream remoteStream = SSL ? new HttpsStream(endPoint, host, port, byProxy) : new HttpStream(endPoint);
-            localStream.CopyToAsync(remoteStream);
-            remoteStream.CopyToAsync(remoteStream);
+
+            var res = new Http.HttpResponseHeader(200, Http.HttpStatus.Connection_Established);
+            byte[] resBin = res.ToBinary();
+            localStream.Write(resBin, 0, resBin.Length);
+            
+            using (var s = Console.OpenStandardOutput())
+            {
+                localStream.Position = 0;
+                localStream.CopyToAsync(s);
+            }
+            remoteStream.CopyToAsync(localStream);
             return remoteStream;
         }
     }

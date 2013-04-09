@@ -2,43 +2,43 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
-using Q.Http;
+using Q;
 
 namespace Q.Proxy
 {
     public class Listener
     {
-        private TcpListener tcpListener;
+        private TcpListener m_tcpListener;
 
         private Repeater m_repeater;
 
 
-        private int pendingRequestsCount;
-
-        public System.Net.IPEndPoint Proxy { get; set; }
-
-        public int PendingRequestsCount { get { return this.pendingRequestsCount; } }
+        public IPEndPoint Proxy { get; set; }
 
         public Listener(string ip, int port)
-        {
-            tcpListener = new TcpListener(System.Net.IPAddress.Parse(ip), port);
-            m_repeater = new LocalRepeater(this.Proxy);
-        }
+            : this(new IPEndPoint(IPAddress.Parse(ip), port))
+        { }
 
         public Listener(string ip, int port, string proxyIP, int proxyPort)
-            : this(ip, port)
+            : this(new IPEndPoint(IPAddress.Parse(ip), port), new IPEndPoint(IPAddress.Parse(proxyIP), proxyPort))
+        { }
+
+        public Listener(IPEndPoint endPoint, IPEndPoint proxy = null)
         {
-            this.Proxy = new System.Net.IPEndPoint(System.Net.IPAddress.Parse(proxyIP), proxyPort);
+            m_tcpListener = new TcpListener(endPoint);
+            this.Proxy = proxy;
+            m_repeater = new LocalRepeater(this.Proxy);
         }
 
         public Listener Start()
         {
-            this.tcpListener.Start(50);
+            this.m_tcpListener.Start(50);
             Logger.Info(this.ToString());
-            this.tcpListener.BeginAcceptTcpClient(new AsyncCallback(DoAccept), tcpListener);
+            this.m_tcpListener.BeginAcceptTcpClient(new AsyncCallback(DoAccept), m_tcpListener);
             return this;
         }
 
@@ -46,8 +46,8 @@ namespace Q.Proxy
         {
             StringBuilder sb = new StringBuilder()
                 .AppendLine("----------------------------------------------------------------------")
-                .AppendFormat("Listen Address\t:\t{0}\n", this.tcpListener.LocalEndpoint)
-                .AppendFormat("Miner Type\t:\t{0}\n", m_repeater);
+                .AppendFormat("Listen Address\t:\t{0}\n", this.m_tcpListener.LocalEndpoint)
+                .AppendFormat("Repeater Type\t:\t{0}\n", m_repeater);
             if (this.Proxy != null)
             {
                 sb.AppendFormat("Proxy Address\t:\t{0}\n", this.Proxy);
@@ -66,12 +66,12 @@ namespace Q.Proxy
                 Stream stream = networkStream;
                 try
                 {
-                    HttpPackage package = null;
-                    HttpReader reader = new HttpReader();
+                    Http.HttpPackage package = null;
+                    Http.HttpReader reader = new Http.HttpReader();
                     reader.OnHeaderReady += (h, s) =>
                     {
-                        HttpRequestHeader req = h as HttpRequestHeader;
-                        if (req.HttpMethod == HttpMethod.Connect)
+                        var req = h as Http.HttpRequestHeader;
+                        if (req.HttpMethod == Http.HttpMethod.Connect)
                         {
                             m_repeater.BeginRelay(stream, req.Host, req.Port, true);
                         }

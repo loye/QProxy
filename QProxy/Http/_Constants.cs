@@ -20,4 +20,9 @@ namespace Q.Http
         public const string POST = "POST";
     }
 
+    public sealed class HttpStatus
+    {
+        public const string Connection_Established = "Connection Established";
+    }
+
 }

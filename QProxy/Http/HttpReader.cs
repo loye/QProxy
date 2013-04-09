@@ -54,7 +54,10 @@ namespace Q.Http
                 HttpHeader header;
                 if (HttpHeader.TryParse(source, 0, length, out header))
                 {
-                    this.OnHeaderReady(header, memoryStream);
+                    if (this.OnHeaderReady != null)
+                    {
+                        this.OnHeaderReady(header, memoryStream);
+                    }
                     int headerLength = header.Length;
                     package = new HttpPackage(header, new HttpContent(source, headerLength, length - headerLength));
                 }
