@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Q;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,7 +7,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
-using Q;
 
 namespace Q.Proxy
 {
@@ -63,29 +63,30 @@ namespace Q.Proxy
             using (TcpClient client = tcp.EndAcceptTcpClient(ar))
             using (NetworkStream networkStream = client.GetStream())
             {
-                Stream stream = networkStream;
                 try
                 {
-                    Http.HttpPackage package = null;
-                    Http.HttpReader reader = new Http.HttpReader();
-                    reader.OnHeaderReady += (h, s) =>
-                    {
-                        var req = h as Http.HttpRequestHeader;
-                        if (req.HttpMethod == Http.HttpMethod.Connect)
-                        {
-                            m_repeater.BeginRelay(stream, req.Host, req.Port, true);
-                        }
-                        else
-                        {
-                            m_repeater.BeginRelay(s, req.Host, req.Port, false);
-                        }
-                    };
-                    for (package = reader.Read(stream);
-                       package != null;
-                       package = reader.Read(stream))
-                    {
+                    m_repeater.BeginRelay(networkStream);
 
-                    }
+                    //Http.HttpPackage package = null;
+                    //Http.HttpReader reader = new Http.HttpReader();
+                    //reader.OnHeaderReady += (h, s) =>
+                    //{
+                    //    var req = h as Http.HttpRequestHeader;
+                    //    if (req.HttpMethod == Http.HttpMethod.Connect)
+                    //    {
+                    //        m_repeater.BeginRelay(stream, req.Host, req.Port, true);
+                    //    }
+                    //    else
+                    //    {
+                    //        m_repeater.BeginRelay(s, req.Host, req.Port, false);
+                    //    }
+                    //};
+                    //for (package = reader.Read(stream);
+                    //   package != null;
+                    //   package = reader.Read(stream))
+                    //{
+
+                    //}
                     /*
                     for (request = HttpPackage.Read(stream);
                         request != null;
@@ -129,10 +130,6 @@ namespace Q.Proxy
                 }
                 finally
                 {
-                    if (stream != null)
-                    {
-                        stream.Dispose();
-                    }
                 }
             } // end of using
         }

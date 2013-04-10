@@ -30,11 +30,11 @@ namespace Q.Http
         {
             SslStream ssltream = null;
             if (connectToProxy)
-            {                
+            {
                 HttpRequestHeader connectHeader = new HttpRequestHeader(HttpMethod.Connect, host, port);
                 byte[] requestBin = connectHeader.ToBinary();
                 stream.Write(requestBin, 0, requestBin.Length);
-                HttpPackage response = new HttpReader().Read(stream);
+                HttpPackage response = HttpPackage.Parse(stream);
                 if (response == null || (response.HttpHeader as HttpResponseHeader).StatusCode != 200)
                 {
                     throw new Exception(String.Format("SwitchToSslStream: Connect to proxy server[{0}:{1}] failed!", host, port));

@@ -45,7 +45,7 @@
     <Compile Include="Http\HttpHeader.cs" />
     <Compile Include="Http\HttpHeaderItem.cs" />
     <Compile Include="Http\HttpPackage.cs" />
-    <Compile Include="Http\HttpReader.cs" />
+    <Compile Include="Http\HttpParser.cs" />
     <Compile Include="Http\HttpRequestHeader.cs" />
     <Compile Include="Http\HttpResponseHeader.cs" />
     <Compile Include="Http\HttpsStream.cs" />

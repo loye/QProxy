@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace Q.Http
 {
-    public class HttpReader
+    public class HttpParser
     {
         private const int BUFFER_LENGTH = 1024;
 
-        public event Action<HttpHeader, Stream> OnHeaderReady;
+
 
         public HttpPackage Read(Stream stream)
         {
@@ -54,10 +54,6 @@ namespace Q.Http
                 HttpHeader header;
                 if (HttpHeader.TryParse(source, 0, length, out header))
                 {
-                    if (this.OnHeaderReady != null)
-                    {
-                        this.OnHeaderReady(header, memoryStream);
-                    }
                     int headerLength = header.Length;
                     package = new HttpPackage(header, new HttpContent(source, headerLength, length - headerLength));
                 }
