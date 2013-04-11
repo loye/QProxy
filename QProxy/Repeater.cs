@@ -11,6 +11,9 @@ namespace Q.Proxy
 {
     public abstract class Repeater
     {
+        //Acceptor
+        //Transmitter
+
         protected IPEndPoint Proxy { get; set; }
 
         public Repeater(IPEndPoint proxy = null)
@@ -18,15 +21,18 @@ namespace Q.Proxy
             this.Proxy = proxy;
         }
 
-        public abstract Stream BeginRelay(Stream localStream);
+        public abstract void BeginRelay(Stream localStream);
     }
 
     public class LocalRepeater : Repeater
     {
         public LocalRepeater(IPEndPoint proxy = null) : base(proxy) { }
 
-        public override Stream BeginRelay(Stream localStream)
+        public override void BeginRelay(Stream localStream)
         {
+            var acceptor = new HttpAcceptor();
+            //acceptor.Accept(localStream);
+
             string host = "www.baidu.com";
             int port = 80;
             bool SSL = false;
@@ -49,11 +55,8 @@ namespace Q.Proxy
             len = remoteStream.Read(buffer, 0, 10000);
             localStream.Write(buffer, 0, len);
 
-            return remoteStream;
+
         }
     }
 
-    //public class HttpRepeater : Repeater
-    //{
-    //}
 }

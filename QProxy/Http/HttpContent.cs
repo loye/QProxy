@@ -50,7 +50,7 @@ namespace Q.Http
 
         public byte[] ToBinary()
         {
-            byte[] result = null;
+            byte[] result;
             if (m_binary != null && m_binary.Length >= m_startIndex + m_length)
             {
                 result = new byte[m_length];

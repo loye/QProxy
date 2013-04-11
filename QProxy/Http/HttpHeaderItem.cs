@@ -99,5 +99,15 @@ namespace Q.Http
         {
             return new HttpHeaderItem(null, value);
         }
+
+        public static implicit operator HttpHeaderItem(int value)
+        {
+            return new HttpHeaderItem(null, value.ToString());
+        }
+
+        public static implicit operator HttpHeaderItem(bool value)
+        {
+            return new HttpHeaderItem(null, value.ToString());
+        }
     }
 }

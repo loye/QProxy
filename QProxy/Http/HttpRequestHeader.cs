@@ -25,7 +25,7 @@ namespace Q.Http
                 return String.Format("{0} {1} {2}\r\n", this.HttpMethod, this.Url, this.Version);
             }
         }
-
+        /*
         public HttpRequestHeader(string httpMethod, string url, string version = "HTTP/1.1")
         {
             Match match = REGEX_URL.Match(url);
@@ -40,7 +40,7 @@ namespace Q.Http
                                 : 80));
             this.Constructor(httpMethod, url, host, port, version);
         }
-
+        */
         public HttpRequestHeader(string httpMethod, string host, int port, string version = "HTTP/1.1")
         {
             this.Constructor(httpMethod, host + ":" + port, host, port, version);

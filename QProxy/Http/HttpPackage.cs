@@ -14,6 +14,8 @@ namespace Q.Http
 
         public HttpContent HttpContent { get; private set; }
 
+        public bool IsValid { get; private set; }
+
         public HttpPackage(HttpHeader httpHeader, HttpContent httpContent)
         {
             this.HttpHeader = httpHeader;
@@ -37,7 +39,7 @@ namespace Q.Http
                 {
                     mem.Write(buffer, 0, len);
                     byte[] bin = mem.GetBuffer();
-                    if (ValidatePackage(bin, (int)mem.Length, ref package))
+                    if (ValidatePackage(bin, 0, (int)mem.Length, ref package))
                     {
                         if (package.HttpHeader.ContentLength == 0
                             && String.Compare(package.HttpHeader[HttpHeaderKey.Connection], "close", true) == 0
@@ -52,18 +54,24 @@ namespace Q.Http
             return package;
         }
 
-        private static bool ValidatePackage(byte[] source, int length, ref HttpPackage package)
+        public static bool ValidatePackage(byte[] source, int startIndex, int length, ref HttpPackage package)
         {
+            bool isValid = false;
             if (package == null)
             {
                 HttpHeader header;
-                if (HttpHeader.TryParse(source, 0, length, out header))
+                if (HttpHeader.TryParse(source, startIndex, length, out header))
                 {
                     int headerLength = header.Length;
-                    package = new HttpPackage(header, new HttpContent(source, headerLength, length - headerLength));
+                    package = new HttpPackage(header, new HttpContent(source, startIndex + headerLength, length - headerLength));
                 }
             }
-            return package != null && package.HttpContent.Append(length - 0).Validate(package.HttpHeader.ContentLength);
+            if (package != null)
+            {
+                isValid = package.HttpContent.Append(length - package.HttpHeader.Length).Validate(package.HttpHeader.ContentLength);
+                package.IsValid = isValid;
+            }
+            return isValid;
         }
 
         public byte[] ToBinary()

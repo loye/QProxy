@@ -1,4 +1,4 @@
-﻿using Q;
+﻿using Q.Http;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,7 +17,7 @@ namespace Q.Proxy
         private Repeater m_repeater;
 
 
-        public IPEndPoint Proxy { get; set; }
+        public IPEndPoint Proxy { get; private set; }
 
         public Listener(string ip, int port)
             : this(new IPEndPoint(IPAddress.Parse(ip), port))
@@ -36,9 +36,15 @@ namespace Q.Proxy
 
         public Listener Start()
         {
-            this.m_tcpListener.Start(50);
+            this.m_tcpListener.Start(100);
             Logger.Info(this.ToString());
             this.m_tcpListener.BeginAcceptTcpClient(new AsyncCallback(DoAccept), m_tcpListener);
+            return this;
+        }
+
+        public Listener Stop()
+        {
+            this.m_tcpListener.Stop();
             return this;
         }
 
@@ -66,27 +72,6 @@ namespace Q.Proxy
                 try
                 {
                     m_repeater.BeginRelay(networkStream);
-
-                    //Http.HttpPackage package = null;
-                    //Http.HttpReader reader = new Http.HttpReader();
-                    //reader.OnHeaderReady += (h, s) =>
-                    //{
-                    //    var req = h as Http.HttpRequestHeader;
-                    //    if (req.HttpMethod == Http.HttpMethod.Connect)
-                    //    {
-                    //        m_repeater.BeginRelay(stream, req.Host, req.Port, true);
-                    //    }
-                    //    else
-                    //    {
-                    //        m_repeater.BeginRelay(s, req.Host, req.Port, false);
-                    //    }
-                    //};
-                    //for (package = reader.Read(stream);
-                    //   package != null;
-                    //   package = reader.Read(stream))
-                    //{
-
-                    //}
                     /*
                     for (request = HttpPackage.Read(stream);
                         request != null;
@@ -133,9 +118,7 @@ namespace Q.Proxy
                 }
             } // end of using
         }
-
-        //private void 
-
+        
         //private SslStream SwitchToSslStream(Stream stream, HttpPackage request)
         //{
         //    SslStream sslStream = null;
