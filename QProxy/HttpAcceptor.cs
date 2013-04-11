@@ -12,23 +12,27 @@ namespace Q.Proxy
     {
         private const int BUFFER_LENGTH = 1024;
 
-        public HttpHeader Accept(Stream stream, out byte[] buffer)
+        public HttpHeader Accept(Stream stream, out byte[] recievedBytes, out int length)
         {
+            recievedBytes = null;
+            length = 0;
             HttpHeader header = null;
             HttpRequestHeader requestHeader;
-            buffer = new byte[BUFFER_LENGTH];
+            byte[] buffer = new byte[BUFFER_LENGTH];
             using (MemoryStream mem = new MemoryStream())
             {
-                for (int len = stream.Read(buffer, 0, buffer.Length);
-                    len > 0;
-                    len = stream.CanRead ? stream.Read(buffer, 0, buffer.Length) : 0)
+                for (int l = stream.Read(buffer, 0, buffer.Length);
+                    l > 0;
+                    l = stream.CanRead ? stream.Read(buffer, 0, buffer.Length) : 0)
                 {
-                    mem.Write(buffer, 0, len);
+                    mem.Write(buffer, 0, l);
                     byte[] bin = mem.GetBuffer();
-                    int length = (int)mem.Length;
-                    if (HttpHeader.TryParse(bin, 0, length, out header))
+                    int len = (int)mem.Length;
+                    if (HttpHeader.TryParse(bin, 0, len, out header))
                     {
                         requestHeader = header as HttpRequestHeader;
+                        recievedBytes = bin;
+                        length = len;
                         break;
                     }
                 }

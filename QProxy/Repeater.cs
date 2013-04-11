@@ -31,31 +31,30 @@ namespace Q.Proxy
         public override void BeginRelay(Stream localStream)
         {
             var acceptor = new HttpAcceptor();
-            //acceptor.Accept(localStream);
-
-            string host = "www.baidu.com";
-            int port = 80;
-            bool SSL = false;
-
-            bool byProxy = this.Proxy != null;
-            IPEndPoint endPoint = byProxy ? this.Proxy : new IPEndPoint(DnsHelper.GetHostAddress(host), port);
-            Stream remoteStream = SSL ? new HttpsStream(endPoint, host, port, byProxy) : new HttpStream(endPoint);
-
-            if (SSL)
+            byte[] recievedBytes;
+            int length;
+            Http.HttpRequestHeader requestHeader = acceptor.Accept(localStream, out recievedBytes, out length) as Http.HttpRequestHeader;
+            if (requestHeader != null)
             {
-                var res = new Http.HttpResponseHeader(200, Http.HttpStatus.Connection_Established);
-                byte[] resBin = res.ToBinary();
-                localStream.Write(resBin, 0, resBin.Length);
+                string host = requestHeader.Host;
+                int port = requestHeader.Port;
+                bool SSL = requestHeader.HttpMethod == HttpMethod.Connect;
+                bool byProxy = false; // this.Proxy != null;
+                IPEndPoint endPoint = byProxy ? this.Proxy : new IPEndPoint(DnsHelper.GetHostAddress(host), port);
+                Stream remoteStream = new HttpStream(endPoint);
+                if (SSL)
+                {
+                    var res = new Http.HttpResponseHeader(200, Http.HttpStatus.Connection_Established);
+                    byte[] resBin = res.ToBinary();
+                    localStream.Write(resBin, 0, resBin.Length);
+                }
+                else
+                {
+                    remoteStream.Write(recievedBytes, 0, length);
+                }
+                localStream.CopyTo(remoteStream);
+                remoteStream.CopyTo(localStream);
             }
-
-            byte[] buffer = new byte[10000];
-            int len = localStream.Read(buffer, 0, 10000);
-            remoteStream.Write(buffer, 0, len);
-
-            len = remoteStream.Read(buffer, 0, 10000);
-            localStream.Write(buffer, 0, len);
-
-
         }
     }
 

@@ -19,15 +19,21 @@ namespace Q.Proxy
 
         public IPEndPoint Proxy { get; private set; }
 
-        public Listener(string ip, int port)
-            : this(new IPEndPoint(IPAddress.Parse(ip), port))
+        public bool DecryptSSL { get; private set; }
+
+        public Listener(string ip, int port, bool decryptSSL = false)
+            : this(new IPEndPoint(IPAddress.Parse(ip), port), decryptSSL)
         { }
 
-        public Listener(string ip, int port, string proxyIP, int proxyPort)
-            : this(new IPEndPoint(IPAddress.Parse(ip), port), new IPEndPoint(IPAddress.Parse(proxyIP), proxyPort))
+        public Listener(string ip, int port, string proxyIP, int proxyPort, bool decryptSSL = false)
+            : this(new IPEndPoint(IPAddress.Parse(ip), port), new IPEndPoint(IPAddress.Parse(proxyIP), proxyPort), decryptSSL)
         { }
 
-        public Listener(IPEndPoint endPoint, IPEndPoint proxy = null)
+        public Listener(IPEndPoint endPoint, bool decryptSSL = false) :
+            this(endPoint, null, decryptSSL)
+        { }
+
+        public Listener(IPEndPoint endPoint, IPEndPoint proxy, bool decryptSSL = false)
         {
             m_tcpListener = new TcpListener(endPoint);
             this.Proxy = proxy;
@@ -118,7 +124,7 @@ namespace Q.Proxy
                 }
             } // end of using
         }
-        
+
         //private SslStream SwitchToSslStream(Stream stream, HttpPackage request)
         //{
         //    SslStream sslStream = null;
