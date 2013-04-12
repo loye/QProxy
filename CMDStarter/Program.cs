@@ -37,7 +37,6 @@ namespace CMDStarter
                 var key = Console.ReadKey().Key;
                 Console.WriteLine();
             }
-
         }
     }
 }

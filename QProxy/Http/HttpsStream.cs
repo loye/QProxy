@@ -11,22 +11,22 @@ namespace Q.Http
         public HttpsStream(IPEndPoint endPoint, string host, int port, bool byProxy = false)
             : base(endPoint)
         {
-            this.InnerStream = SwitchToSslStream(this.InnerStream, host, port, byProxy);
+            this.InnerStream = SwitchToSslStreamAsClient(this.InnerStream, host, port, byProxy);
         }
 
         public HttpsStream(Socket socket, string host, int port, bool byProxy = false)
             : base(socket)
         {
-            this.InnerStream = SwitchToSslStream(this.InnerStream, host, port, byProxy);
+            this.InnerStream = SwitchToSslStreamAsClient(this.InnerStream, host, port, byProxy);
         }
 
         public HttpsStream(HttpStream stream, string host, int port, bool byProxy = false)
             : base(stream.Socket)
         {
-            this.InnerStream = SwitchToSslStream(this.InnerStream, host, port, byProxy);
+            this.InnerStream = SwitchToSslStreamAsClient(this.InnerStream, host, port, byProxy);
         }
 
-        private SslStream SwitchToSslStream(Stream stream, string host, int port, bool connectToProxy)
+        private SslStream SwitchToSslStreamAsClient(Stream stream, string host, int port, bool connectToProxy)
         {
             SslStream ssltream = null;
             if (connectToProxy)

@@ -75,9 +75,23 @@ namespace Q.Proxy
             using (TcpClient client = tcp.EndAcceptTcpClient(ar))
             using (NetworkStream networkStream = client.GetStream())
             {
+                Stream stream = networkStream;
                 try
                 {
-                    m_repeater.BeginRelay(networkStream);
+                    while (stream.CanRead)
+                    {
+
+                        HttpHeader header;
+                        BufferPool bufferPool;
+                        if (!new HttpAcceptor().TryAccept(networkStream, out bufferPool, out header))
+                        {
+                            break;
+                        }
+                        var requestHeader = header as Http.HttpRequestHeader;
+                        m_repeater.Relay(stream, bufferPool, requestHeader);
+                    }
+
+
                     /*
                     for (request = HttpPackage.Read(stream);
                         request != null;
@@ -111,7 +125,7 @@ namespace Q.Proxy
                                     && String.Compare(request.HeaderItems["Proxy-Connection"], "keep-alive", true) == 0;
                             }
                         }
-                    } // end of for
+                    }
                     */
                 }
                 catch (Exception ex)
@@ -122,21 +136,7 @@ namespace Q.Proxy
                 finally
                 {
                 }
-            } // end of using
+            }
         }
-
-        //private SslStream SwitchToSslStream(Stream stream, HttpPackage request)
-        //{
-        //    SslStream sslStream = null;
-        //    byte[] repBin = ASCIIEncoding.ASCII.GetBytes(String.Format("{0} 200 Connection Established\r\n\r\n", request.Version));
-        //    stream.Write(repBin, 0, repBin.Length);
-        //    X509Certificate2 cert = CAHelper.GetCertificate(request.Host);
-        //    if (cert != null && cert.HasPrivateKey)
-        //    {
-        //        sslStream = new SslStream(stream, false);
-        //        sslStream.AuthenticateAsServer(cert, false, SslProtocols.Tls, true);
-        //    }
-        //    return sslStream;
-        //}
     }
 }

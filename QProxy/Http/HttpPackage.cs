@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace Q.Http
 {
@@ -54,7 +51,7 @@ namespace Q.Http
             return package;
         }
 
-        public static bool ValidatePackage(byte[] source, int startIndex, int length, ref HttpPackage package)
+        private static bool ValidatePackage(byte[] source, int startIndex, int length, ref HttpPackage package)
         {
             bool isValid = false;
             if (package == null)

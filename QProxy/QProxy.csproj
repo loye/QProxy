@@ -39,6 +39,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BufferPool.cs" />
+    <Compile Include="CAHelper.cs" />
     <Compile Include="DnsHelper.cs" />
     <Compile Include="EncryptionProvider.cs" />
     <Compile Include="Http\HttpContent.cs" />
