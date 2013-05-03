@@ -6,6 +6,7 @@ using System.Net.Sockets;
 
 namespace Q.Http
 {
+    [Obsolete]
     public class HttpsStream : HttpStream
     {
         public HttpsStream(IPEndPoint endPoint, string host, int port, bool byProxy = false)

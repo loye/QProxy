@@ -13,25 +13,137 @@ using Q.Http;
 
 namespace Q.Proxy
 {
-    public abstract class Repeater
+    public class Repeater
     {
-        //Acceptor
-        //Transmitter
+        private const int BUFFER_LENGTH = 4096;
 
         public IPEndPoint Proxy { get; set; }
-
-        public bool DecryptSSL { get; set; }
 
         public Repeater(IPEndPoint proxy = null)
         {
             this.Proxy = proxy;
         }
 
-        public abstract void Relay(Stream localStream, BufferPool bufferPool, Http.HttpRequestHeader requestHeader);
+        public void Relay(ref Stream localStream, ref Stream remoteStream)
+        {
+            HttpPackage package = null;
+            int bufferLength = BUFFER_LENGTH;
+            byte[] buffer = new byte[bufferLength];
 
+            using (MemoryStream mem = new MemoryStream())
+            {
+                for (int len = localStream.Read(buffer, 0, buffer.Length);
+                    len > 0;
+                    len = localStream.CanRead ? localStream.Read(buffer, 0, buffer.Length) : 0)
+                {
+                    if (remoteStream != null)
+                    {
+                        remoteStream.Write(buffer, 0, len);
+                    }
+                    mem.Write(buffer, 0, len);
 
+                    byte[] bin = mem.GetBuffer();
+                    HttpPackage.ValidatePackage(bin, 0, (int)mem.Length, ref package);
+                    if (package != null)
+                    {
+                        // start first send
+                        if (remoteStream == null)
+                        {
+                            remoteStream = this.Connect(ref localStream, package.HttpHeader as Http.HttpRequestHeader, this.Proxy);
+                            remoteStream.Write(bin, 0, (int)mem.Length);
+                        }
+
+                        if (package.IsValid)
+                        {
+                            if (package.HttpHeader.ContentLength == 0
+                                && String.Compare(package.HttpHeader[HttpHeaderKey.Connection], "close", true) == 0
+                                && !package.HttpHeader.StartLine.Contains("Connection Established")) // Connection: close
+                            {
+                                continue;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        private Stream Connect(ref Stream localStream, Http.HttpRequestHeader requestHeader, IPEndPoint proxy)
+        {
+            Stream remoteStream;
+            string host = requestHeader.Host;
+            int port = requestHeader.Port;
+            bool SSL = requestHeader.HttpMethod == HttpMethod.Connect;
+            bool decryptSSL = false; //TODO
+            IPEndPoint endPoint = this.Proxy ?? new IPEndPoint(DnsHelper.GetHostAddress(host), port);
+
+            var socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            socket.Connect(endPoint);
+            remoteStream = new NetworkStream(socket, true);
+
+            if (SSL)
+            {
+                ConnectBySSL(ref localStream, ref remoteStream, requestHeader, this.Proxy != null, decryptSSL);
+            }
+
+            return remoteStream;
+        }
+
+        private void ConnectBySSL(ref Stream localStream, ref Stream remoteStream, Http.HttpRequestHeader connectHeader, bool connectToProxy, bool decryptSSL)
+        {
+            string host = connectHeader.Host;
+            int port = connectHeader.Port;
+            string version = connectHeader.Version;
+
+            // Send connect request to http proxy server
+            if (connectToProxy)
+            {
+                byte[] requestBin = connectHeader.ToBinary();
+                remoteStream.Write(requestBin, 0, requestBin.Length);
+                HttpPackage response = HttpPackage.Parse(remoteStream);
+                if (response == null || (response.HttpHeader as Http.HttpResponseHeader).StatusCode != 200)
+                {
+                    throw new Exception(String.Format("SwitchToSslStreamAsClient: Connect to proxy server[{0}:{1}] with SSL failed!", host, port));
+                }
+            }
+
+            // Send connected response to local
+            var res = new Http.HttpResponseHeader(200, Http.HttpStatus.Connection_Established, version);
+            byte[] responseBin = res.ToBinary();
+            localStream.Write(responseBin, 0, responseBin.Length);
+
+            // Decrypt SSL
+            if (decryptSSL)
+            {
+                var t1 = SwitchToSslStreamAsClientAsync(remoteStream, host);
+                var t2 = SwitchToSslStreamAsServerAsync(localStream, host);
+                Task.WaitAll(t1, t2);
+                remoteStream = t1.Result;
+                localStream = t2.Result;
+            }
+        }
+
+        private async Task<SslStream> SwitchToSslStreamAsClientAsync(Stream stream, string host)
+        {
+            SslStream ssltream = new SslStream(stream, false);
+            await ssltream.AuthenticateAsClientAsync(host);
+            return ssltream;
+        }
+
+        private async Task<SslStream> SwitchToSslStreamAsServerAsync(Stream stream, string host)
+        {
+            SslStream sslStream = null;
+            X509Certificate2 cert = CAHelper.GetCertificate(host);
+            if (cert != null && cert.HasPrivateKey)
+            {
+                sslStream = new SslStream(stream, false);
+                await sslStream.AuthenticateAsServerAsync(cert, false, SslProtocols.Tls, true);
+            }
+            return sslStream;
+        }
     }
 
+    /*
     public class LocalRepeater : Repeater
     {
         private const int BUFFER_LENGTH = 1024;
@@ -156,4 +268,5 @@ namespace Q.Proxy
             return sslStream;
         }
     }
+     * */
 }

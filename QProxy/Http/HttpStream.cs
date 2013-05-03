@@ -5,6 +5,7 @@ using System.Net.Sockets;
 
 namespace Q.Http
 {
+    [Obsolete]
     public class HttpStream : Stream
     {
         public Socket Socket { get; private set; }

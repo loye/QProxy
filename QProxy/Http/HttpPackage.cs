@@ -5,7 +5,7 @@ namespace Q.Http
 {
     public class HttpPackage
     {
-        private const int BUFFER_LENGTH = 1024;
+        private const int BUFFER_LENGTH = 4096;
 
         public HttpHeader HttpHeader { get; private set; }
 
@@ -51,7 +51,7 @@ namespace Q.Http
             return package;
         }
 
-        private static bool ValidatePackage(byte[] source, int startIndex, int length, ref HttpPackage package)
+        public static bool ValidatePackage(byte[] source, int startIndex, int length, ref HttpPackage package)
         {
             bool isValid = false;
             if (package == null)
@@ -80,5 +80,6 @@ namespace Q.Http
             Array.Copy(contentBin, 0, bin, headerBin.Length, contentBin.Length);
             return bin;
         }
+
     }
 }

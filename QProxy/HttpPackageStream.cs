@@ -5,6 +5,7 @@ using Q.Http;
 
 namespace Q.Proxy
 {
+    [Obsolete]
     public class HttpPackageStream : Stream
     {
         public Guid Id { get; private set; }

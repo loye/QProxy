@@ -37,7 +37,7 @@ namespace Q.Proxy
         {
             m_tcpListener = new TcpListener(endPoint);
             this.Proxy = proxy;
-            m_repeater = new LocalRepeater(this.Proxy);
+            m_repeater = new Repeater(this.Proxy);
         }
 
         public Listener Start()
@@ -75,20 +75,22 @@ namespace Q.Proxy
             using (TcpClient client = tcp.EndAcceptTcpClient(ar))
             using (NetworkStream networkStream = client.GetStream())
             {
-                Stream stream = networkStream;
+                Stream localStream = networkStream;
+                Stream remoteStream = null;
                 try
                 {
-                    while (stream.CanRead)
+                    while (localStream.CanRead)
                     {
+                        m_repeater.Relay(ref localStream, ref remoteStream);
 
-                        HttpHeader header;
-                        BufferPool bufferPool;
-                        if (!new HttpAcceptor().TryAccept(networkStream, out bufferPool, out header))
-                        {
-                            break;
-                        }
-                        var requestHeader = header as Http.HttpRequestHeader;
-                        m_repeater.Relay(stream, bufferPool, requestHeader);
+                        //HttpHeader header;
+                        //BufferPool bufferPool;
+                        //if (!new HttpAcceptor().TryAccept(networkStream, out bufferPool, out header))
+                        //{
+                        //    break;
+                        //}
+                        //var requestHeader = header as Http.HttpRequestHeader;
+                        //m_repeater.Relay(stream, bufferPool, requestHeader);
                     }
 
 
