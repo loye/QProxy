@@ -76,12 +76,9 @@ namespace Q.Proxy
             using (NetworkStream networkStream = client.GetStream())
             {
                 Stream localStream = networkStream;
-                Stream remoteStream = null;
                 try
                 {
-                    while (localStream.CanRead)
-                    {
-                        m_repeater.Relay(ref localStream, ref remoteStream);
+                    m_repeater.Relay(ref localStream);
 
                         //HttpHeader header;
                         //BufferPool bufferPool;
@@ -91,7 +88,6 @@ namespace Q.Proxy
                         //}
                         //var requestHeader = header as Http.HttpRequestHeader;
                         //m_repeater.Relay(stream, bufferPool, requestHeader);
-                    }
 
 
                     /*

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -25,33 +23,13 @@ namespace Q.Http
                 return String.Format("{0} {1} {2}\r\n", this.HttpMethod, this.Url, this.Version);
             }
         }
-        /*
-        public HttpRequestHeader(string httpMethod, string url, string version = "HTTP/1.1")
+
+        public HttpRequestHeader(string httpMethod, string host, int port, string version = "HTTP/1.1") :
+            this(httpMethod, host + ":" + port, host, port, version)
         {
-            Match match = REGEX_URL.Match(url);
-            if (!match.Success || match.Groups["schemaNotSupported"].Success)
-            {
-                throw new ArgumentException("url incorrect!", "url");
-            }
-            string host = match.Groups["host"].Success ? match.Groups["host"].Value : null;
-            int port = match.Groups["port"].Success ? int.Parse(match.Groups["port"].Value)
-                        : (!match.Groups["schema"].Success ? 80
-                            : (String.Compare(match.Groups["schema"].Value, "https", true) == 0 ? 443
-                                : 80));
-            this.Constructor(httpMethod, url, host, port, version);
-        }
-        */
-        public HttpRequestHeader(string httpMethod, string host, int port, string version = "HTTP/1.1")
-        {
-            this.Constructor(httpMethod, host + ":" + port, host, port, version);
         }
 
         public HttpRequestHeader(string httpMethod, string url, string host, int port, string version = "HTTP/1.1")
-        {
-            this.Constructor(httpMethod, url, host, port, version);
-        }
-
-        private void Constructor(string httpMethod, string url, string host, int port, string version)
         {
             this.HttpMethod = httpMethod;
             this.Url = url;
