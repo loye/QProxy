@@ -35,14 +35,16 @@ namespace Q.Proxy
 
         public Listener(IPEndPoint endPoint, IPEndPoint proxy, bool decryptSSL = false)
         {
-            m_tcpListener = new TcpListener(endPoint);
             this.Proxy = proxy;
+            this.DecryptSSL = decryptSSL;
+            m_tcpListener = new TcpListener(endPoint);
             m_repeater = new Repeater(this.Proxy);
+            m_repeater.DecryptSSL = this.DecryptSSL;
         }
 
         public Listener Start()
         {
-            this.m_tcpListener.Start(100);
+            this.m_tcpListener.Start(50);
             Logger.Info(this.ToString());
             this.m_tcpListener.BeginAcceptTcpClient(new AsyncCallback(DoAccept), m_tcpListener);
             return this;
@@ -78,61 +80,20 @@ namespace Q.Proxy
                 Stream localStream = networkStream;
                 try
                 {
+                    Console.WriteLine("request begin");
                     m_repeater.Relay(ref localStream);
-
-                        //HttpHeader header;
-                        //BufferPool bufferPool;
-                        //if (!new HttpAcceptor().TryAccept(networkStream, out bufferPool, out header))
-                        //{
-                        //    break;
-                        //}
-                        //var requestHeader = header as Http.HttpRequestHeader;
-                        //m_repeater.Relay(stream, bufferPool, requestHeader);
-
-
-                    /*
-                    for (request = HttpPackage.Read(stream);
-                        request != null;
-                        request = keepAlive ? HttpPackage.Read(stream) : null, response = null, keepAlive = false)
-                    {
-                        DateTime startTime = DateTime.Now;
-                        if (isSsl)
-                        {
-                            request.Host = host;
-                            request.Port = port;
-                            request.IsSSL = true;
-                        }
-                        if (request.HttpMethod == "CONNECT")
-                        {
-                            stream = SwitchToSslStream(stream, request);
-                            isSsl = keepAlive = true;
-                            host = request.Host;
-                            port = request.Port;
-                        }
-                        else
-                        {
-                            this.pendingRequestsCount++;
-                            response = this.miner.Fetch(request, this.Proxy, this.Proxy != null);
-                            this.pendingRequestsCount--;
-                            if (response != null && stream.CanWrite)
-                            {
-                                stream.Write(response.Binary, 0, response.Length);
-                                stream.Flush();
-                                // Proxy-Connection: keep-alive
-                                keepAlive = request.HeaderItems.ContainsKey("Proxy-Connection")
-                                    && String.Compare(request.HeaderItems["Proxy-Connection"], "keep-alive", true) == 0;
-                            }
-                        }
-                    }
-                    */
+                    Console.WriteLine("request end");
                 }
                 catch (Exception ex)
                 {
-                    throw ex;
                     //Logger.PublishException(ex, request != null ? String.Format("{0}:{1}\n{2}", request.Host, request.Port, request.StartLine) : null);
                 }
                 finally
                 {
+                    if (localStream != null)
+                    {
+                        localStream.Dispose();
+                    }
                 }
             }
         }

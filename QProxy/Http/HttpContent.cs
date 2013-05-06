@@ -28,11 +28,11 @@ namespace Q.Http
             }
         }
 
-        public HttpContent Append(int length)
-        {
-            m_length = Math.Min(m_binary.Length - m_startIndex, length);
-            return this;
-        }
+        //public HttpContent Append(int length)
+        //{
+        //    m_length = Math.Min(m_binary.Length - m_startIndex, length);
+        //    return this;
+        //}
 
         public bool Validate(int expectLength)
         {
@@ -66,21 +66,21 @@ namespace Q.Http
         private bool ValidateChunkedBlock()
         {
             byte[] bin = m_binary;
-            int length = m_length, startIndex = m_chunkedNextBlockOffset;
-            if (m_binary == null || length < 5)
+            int totalLength = m_startIndex + m_length, startIndex = m_chunkedNextBlockOffset;
+            if (startIndex > totalLength - 5)
             {
                 return false;
             }
             int contentLength = 0, i = startIndex;
-            for (int temp = bin[i]; temp != 0x0D && i < length; temp = bin[++i])
+            for (int temp = bin[i]; temp != 0x0D && i < totalLength; temp = bin[++i])
             {
-                if (i >= length - 1)
+                if (i >= totalLength - 1)
                 {
                     return false;
                 }
                 contentLength = contentLength * 16 + (temp > 0x40 ? (temp > 0x60 ? temp - 0x60 : temp - 0x40) + 9 : temp - 0x30);
             }
-            m_chunkedNextBlockOffset = i + 2 + contentLength + 2; // i + \r\n + contentLength + \r\n
+            m_chunkedNextBlockOffset = i + contentLength + 4; // i + \r\n + contentLength + \r\n
             return contentLength == 0 || ValidateChunkedBlock();
         }
     }

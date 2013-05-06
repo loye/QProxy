@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Q.Http;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,14 +10,11 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
-using Q.Http;
 
 namespace Q.Proxy
 {
     public class Repeater
     {
-        private const int BUFFER_LENGTH = 4096;
-
         public IPEndPoint Proxy { get; set; }
 
         public bool DecryptSSL { get; set; }
@@ -28,12 +26,12 @@ namespace Q.Proxy
 
         public void Relay(ref Stream localStream)
         {
-            byte[] buffer = new byte[BUFFER_LENGTH];
+            byte[] buffer = new byte[HttpPackage.BUFFER_LENGTH];
             Stream remoteStream = null;
-            bool SSL = false;
 
-            for (bool hasRequest = false; localStream.CanRead; hasRequest = false)
+            for (bool hasRequest = true, requestSent = false; hasRequest && localStream.CanRead; requestSent = false)
             {
+                hasRequest = false;
                 // Request
                 using (MemoryStream mem = new MemoryStream())
                 {
@@ -46,6 +44,7 @@ namespace Q.Proxy
                         if (remoteStream != null)
                         {
                             remoteStream.Write(buffer, 0, len);
+                            requestSent = true;
                         }
 
                         mem.Write(buffer, 0, len);
@@ -57,10 +56,21 @@ namespace Q.Proxy
                             if (remoteStream == null)
                             {
                                 var requestHeader = package.HttpHeader as Http.HttpRequestHeader;
-                                remoteStream = this.Connect(ref localStream, requestHeader, this.Proxy, (ds) =>
+                                remoteStream = this.Connect(ref localStream, requestHeader);
+                                if (requestHeader.HttpMethod == HttpMethod.Connect)
                                 {
-                                    ds.Write(bin, 0, (int)mem.Length);
-                                });
+                                    if (!this.DecryptSSL)
+                                    {
+                                        this.DirectRelay(localStream, remoteStream);
+                                        return;
+                                    }
+                                    break;
+                                }
+                                else
+                                {
+                                    remoteStream.Write(bin, 0, (int)mem.Length);
+                                    requestSent = true;
+                                }
                             }
                             if (IsPackageFinished(package))
                             {
@@ -69,8 +79,9 @@ namespace Q.Proxy
                         }
                     }
                 }
+
                 // Response
-                if (hasRequest && remoteStream.CanRead && localStream.CanWrite)
+                if (requestSent && remoteStream.CanRead && localStream.CanWrite)
                 {
                     using (MemoryStream mem = new MemoryStream())
                     {
@@ -99,9 +110,9 @@ namespace Q.Proxy
             if (package != null && package.IsValid)
             {
                 if (package.HttpHeader.ContentLength == 0
-                    && String.Compare(package.HttpHeader[HttpHeaderKey.Connection], "close", true) == 0
-                    && !package.HttpHeader.StartLine.Contains("Connection Established")) // Connection: close
+                    && String.Compare(package.HttpHeader[HttpHeaderKey.Connection], "close", true) == 0) // Connection: close
                 {
+                    Console.WriteLine("Connection: close");
                     return false;
                 }
                 return true;
@@ -109,9 +120,9 @@ namespace Q.Proxy
             return false;
         }
 
-        private void DirectRelay(ref Stream localStream, ref Stream remoteStream)
+        private void DirectRelay(Stream localStream, Stream remoteStream)
         {
-            byte[] buffer = new byte[BUFFER_LENGTH];
+            byte[] buffer = new byte[HttpPackage.BUFFER_LENGTH];
             for (bool hasRequest = false; localStream.CanRead && remoteStream.CanWrite; hasRequest = false)
             {
                 // Request
@@ -135,38 +146,33 @@ namespace Q.Proxy
             }
         }
 
-        private Stream Connect(ref Stream localStream, Http.HttpRequestHeader requestHeader, IPEndPoint proxy, Action<Stream> writeTo)
+        private Stream Connect(ref Stream localStream, Http.HttpRequestHeader requestHeader)
         {
             Stream remoteStream;
-            bool SSL = requestHeader.HttpMethod == HttpMethod.Connect;
-
             IPEndPoint endPoint = this.Proxy ?? new IPEndPoint(DnsHelper.GetHostAddress(requestHeader.Host), requestHeader.Port);
 
             Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             socket.Connect(endPoint);
             remoteStream = new NetworkStream(socket, true);
 
-            if (SSL)
+            if (requestHeader.HttpMethod == HttpMethod.Connect)
             {
-                ConnectBySSL(ref localStream, ref remoteStream, requestHeader, this.Proxy != null, this.DecryptSSL);
+                ConnectBySSL(ref localStream, ref remoteStream, requestHeader);
             }
-            else
-            {
-                writeTo(remoteStream);
-            }
+
             return remoteStream;
         }
 
         #region Https Connection
 
-        private void ConnectBySSL(ref Stream localStream, ref Stream remoteStream, Http.HttpRequestHeader requestHeader, bool connectToProxy, bool decryptSSL)
+        private void ConnectBySSL(ref Stream localStream, ref Stream remoteStream, Http.HttpRequestHeader requestHeader)
         {
             string host = requestHeader.Host;
             int port = requestHeader.Port;
             string version = requestHeader.Version;
 
             // Send connect request to http proxy server
-            if (connectToProxy)
+            if (this.Proxy != null)
             {
                 byte[] requestBin = requestHeader.ToBinary();
                 remoteStream.Write(requestBin, 0, requestBin.Length);
@@ -183,7 +189,7 @@ namespace Q.Proxy
             localStream.Write(responseBin, 0, responseBin.Length);
 
             // Decrypt SSL
-            if (decryptSSL)
+            if (this.DecryptSSL)
             {
                 var t1 = SwitchToSslStreamAsClientAsync(remoteStream, host);
                 var t2 = SwitchToSslStreamAsServerAsync(localStream, host);

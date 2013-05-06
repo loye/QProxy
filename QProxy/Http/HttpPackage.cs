@@ -5,7 +5,7 @@ namespace Q.Http
 {
     public class HttpPackage
     {
-        private const int BUFFER_LENGTH = 4096;
+        public const int BUFFER_LENGTH = 4096;
 
         public HttpHeader HttpHeader { get; private set; }
 
@@ -65,7 +65,8 @@ namespace Q.Http
             }
             if (package != null)
             {
-                isValid = package.HttpContent.Append(length - package.HttpHeader.Length).Validate(package.HttpHeader.ContentLength);
+                package.HttpContent = new HttpContent(source, startIndex + package.HttpHeader.Length, length - package.HttpHeader.Length);
+                isValid = package.HttpContent.Validate(package.HttpHeader.ContentLength);
                 package.IsValid = isValid;
             }
             return isValid;
