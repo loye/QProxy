@@ -120,30 +120,40 @@ namespace Q.Proxy
             return false;
         }
 
-        private void DirectRelay(Stream localStream, Stream remoteStream)
+        private async Task DirectRelay(Stream localStream, Stream remoteStream)
         {
             byte[] buffer = new byte[HttpPackage.BUFFER_LENGTH];
-            for (bool hasRequest = false; localStream.CanRead && remoteStream.CanWrite; hasRequest = false)
-            {
-                // Request
-                for (int len = localStream.Read(buffer, 0, buffer.Length);
-                        len > 0;
-                        len = localStream.CanRead ? localStream.Read(buffer, 0, buffer.Length) : 0)
-                {
-                    hasRequest = true;
-                    remoteStream.Write(buffer, 0, len);
-                }
-                // Response
-                if (hasRequest && remoteStream.CanRead && localStream.CanWrite)
-                {
-                    for (int len = remoteStream.Read(buffer, 0, buffer.Length);
-                       len > 0;
-                       len = remoteStream.CanRead ? remoteStream.Read(buffer, 0, buffer.Length) : 0)
-                    {
-                        localStream.Write(buffer, 0, len);
-                    }
-                }
-            }
+
+
+            await localStream.CopyToAsync(remoteStream);
+            await remoteStream.CopyToAsync(localStream);
+
+
+            //int requestLen = 0, responseLen = 0;
+            //do
+            //{
+            //    requestLen = 0;
+            //    responseLen = 0;
+            //    // Request
+            //    for (int len = localStream.Read(buffer, 0, buffer.Length);
+            //            len > 0;
+            //            len = localStream.CanRead ? localStream.Read(buffer, 0, buffer.Length) : 0)
+            //    {
+            //        requestLen += len;
+            //        remoteStream.Write(buffer, 0, len);
+            //    }
+            //    // Response
+            //    if (requestLen > 0 && remoteStream.CanRead && localStream.CanWrite)
+            //    {
+            //        for (int len = remoteStream.Read(buffer, 0, buffer.Length);
+            //           len > 0;
+            //           len = remoteStream.CanRead ? remoteStream.Read(buffer, 0, buffer.Length) : 0)
+            //        {
+            //            responseLen += len;
+            //            localStream.Write(buffer, 0, len);
+            //        }
+            //    }
+            //} while (responseLen > 0);
         }
 
         private Stream Connect(ref Stream localStream, Http.HttpRequestHeader requestHeader)
