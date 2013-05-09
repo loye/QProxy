@@ -26,7 +26,8 @@ namespace Q.Proxy
 
         public void Relay(ref Stream localStream)
         {
-            byte[] buffer = new byte[HttpPackage.BUFFER_LENGTH];
+            byte[] reqBuf = new byte[HttpPackage.BUFFER_LENGTH];
+            byte[] resBuf = new byte[HttpPackage.BUFFER_LENGTH];
             Stream remoteStream = null;
 
             for (bool hasRequest = true, requestSent = false; hasRequest && localStream.CanRead; requestSent = false)
@@ -36,18 +37,18 @@ namespace Q.Proxy
                 using (MemoryStream mem = new MemoryStream())
                 {
                     HttpPackage package = null;
-                    for (int len = localStream.Read(buffer, 0, buffer.Length);
+                    for (int len = localStream.Read(reqBuf, 0, reqBuf.Length);
                         len > 0;
-                        len = localStream.CanRead ? localStream.Read(buffer, 0, buffer.Length) : 0)
+                        len = localStream.CanRead ? localStream.Read(reqBuf, 0, reqBuf.Length) : 0)
                     {
                         hasRequest = true;
                         if (remoteStream != null)
                         {
-                            remoteStream.Write(buffer, 0, len);
+                            remoteStream.Write(reqBuf, 0, len);
                             requestSent = true;
                         }
 
-                        mem.Write(buffer, 0, len);
+                        mem.Write(reqBuf, 0, len);
                         byte[] bin = mem.GetBuffer();
                         HttpPackage.ValidatePackage(bin, 0, (int)mem.Length, ref package);
                         if (package != null)
@@ -69,8 +70,8 @@ namespace Q.Proxy
                                 else
                                 {
                                     remoteStream.Write(bin, 0, (int)mem.Length);
-                                    //this.DirectRelay(localStream, remoteStream);
-                                    //return;
+                                    this.DirectRelay(localStream, remoteStream);
+                                    return;
                                     requestSent = true;
                                 }
                             }
@@ -88,12 +89,12 @@ namespace Q.Proxy
                     using (MemoryStream mem = new MemoryStream())
                     {
                         HttpPackage package = null;
-                        for (int len = remoteStream.Read(buffer, 0, buffer.Length);
+                        for (int len = remoteStream.Read(resBuf, 0, resBuf.Length);
                             len > 0;
-                            len = remoteStream.CanRead ? remoteStream.Read(buffer, 0, buffer.Length) : 0)
+                            len = remoteStream.CanRead ? remoteStream.Read(resBuf, 0, resBuf.Length) : 0)
                         {
-                            localStream.Write(buffer, 0, len);
-                            mem.Write(buffer, 0, len);
+                            localStream.Write(resBuf, 0, len);
+                            mem.Write(resBuf, 0, len);
                             byte[] bin = mem.GetBuffer();
                             if (HttpPackage.ValidatePackage(bin, 0, (int)mem.Length, ref package) && IsPackageFinished(package))
                             {
@@ -127,6 +128,7 @@ namespace Q.Proxy
             await from.ReadAsync(buffer, 0, buffer.Length).ContinueWith(async (alen) =>
             {
                 int len = await alen;
+                Console.WriteLine(len);
                 if (len > 0)
                 {
                     to.Write(buffer, 0, len);
@@ -137,13 +139,18 @@ namespace Q.Proxy
 
         private void DirectRelay(Stream localStream, Stream remoteStream)
         {
-            byte[] buf1 = new byte[HttpPackage.BUFFER_LENGTH];
-            byte[] buf2 = new byte[HttpPackage.BUFFER_LENGTH];
+            byte[] reqBuf = new byte[HttpPackage.BUFFER_LENGTH];
+            byte[] resBuf = new byte[HttpPackage.BUFFER_LENGTH];
 
-            Task.WaitAll(
-                Transmit(localStream, remoteStream, buf1),
-                Transmit(remoteStream, localStream, buf2));
+
+            Task.WhenAll(
+                Transmit(localStream, remoteStream, reqBuf),
+                Transmit(remoteStream, localStream, resBuf));
+
+            //System.Threading.Thread.Sleep(10000);
         }
+
+        #region Connect
 
         private Stream Connect(ref Stream localStream, Http.HttpRequestHeader requestHeader)
         {
@@ -161,8 +168,6 @@ namespace Q.Proxy
 
             return remoteStream;
         }
-
-        #region Https Connection
 
         private void ConnectBySSL(ref Stream localStream, ref Stream remoteStream, Http.HttpRequestHeader requestHeader)
         {
@@ -184,6 +189,7 @@ namespace Q.Proxy
 
             // Send connected response to local
             var res = new Http.HttpResponseHeader(200, Http.HttpStatus.Connection_Established, version);
+            res[HttpHeaderKey.Connection] = "close";
             byte[] responseBin = res.ToBinary();
             localStream.Write(responseBin, 0, responseBin.Length);
 

@@ -12,8 +12,8 @@ namespace CMDStarter
     {
         static void Main(string[] args)
         {
-            //new Listener("127.0.0.1", 1000, false).Start();
-            new Listener("127.0.0.1", 1000, "127.0.0.1", 8888, false).Start();
+            new Listener("127.0.0.1", 1000, true).Start();
+            //new Listener("127.0.0.1", 1000, "127.0.0.1", 8888, false).Start();
 
             //            var s = new HttpPackageStream(new Uri("https://pxy.apphb.com/miner"), "www.baidu.com", 80, new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8888));
 
@@ -33,7 +33,7 @@ namespace CMDStarter
             //            var bin = ASCIIEncoding.ASCII.GetBytes(source);
             //            s.Write(bin, 0, bin.Length);
 
-
+            Console.WriteLine("Started");
             var key = Console.ReadKey().Key;
         }
     }

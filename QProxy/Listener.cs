@@ -46,7 +46,7 @@ namespace Q.Proxy
         {
             this.m_tcpListener.Start(50);
             Logger.Info(this.ToString());
-            this.m_tcpListener.BeginAcceptTcpClient(new AsyncCallback(DoAccept), m_tcpListener);
+            Accept(this.m_tcpListener);
             return this;
         }
 
@@ -70,32 +70,34 @@ namespace Q.Proxy
             return sb.ToString();
         }
 
-        private void DoAccept(IAsyncResult ar)
+        private void Accept(TcpListener listener)
         {
-            TcpListener tcp = (ar.AsyncState as TcpListener);
-            tcp.BeginAcceptTcpClient(new AsyncCallback(DoAccept), tcp);
-            using (TcpClient client = tcp.EndAcceptTcpClient(ar))
-            using (NetworkStream networkStream = client.GetStream())
+            listener.AcceptTcpClientAsync().ContinueWith(async (clientAsync) =>
             {
-                Stream localStream = networkStream;
-                try
+                Accept(listener);
+                using (TcpClient client = await clientAsync)
+                using (NetworkStream networkStream = client.GetStream())
                 {
-                    Console.WriteLine("request begin");
-                    m_repeater.Relay(ref localStream);
-                    Console.WriteLine("request end");
-                }
-                catch (Exception ex)
-                {
-                    //Logger.PublishException(ex, request != null ? String.Format("{0}:{1}\n{2}", request.Host, request.Port, request.StartLine) : null);
-                }
-                finally
-                {
-                    if (localStream != null)
+                    Stream localStream = networkStream;
+                    try
                     {
-                        localStream.Dispose();
+                        Console.WriteLine("request begin");
+                        m_repeater.Relay(ref localStream);
+                        Console.WriteLine("request end");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.PublishException(ex);
+                    }
+                    finally
+                    {
+                        if (localStream != null)
+                        {
+                            localStream.Dispose();
+                        }
                     }
                 }
-            }
+            });
         }
     }
 }
