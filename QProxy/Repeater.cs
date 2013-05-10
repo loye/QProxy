@@ -70,8 +70,6 @@ namespace Q.Proxy
                                 else
                                 {
                                     remoteStream.Write(bin, 0, (int)mem.Length);
-                                    this.DirectRelay(localStream, remoteStream);
-                                    return;
                                     requestSent = true;
                                 }
                             }
@@ -125,29 +123,22 @@ namespace Q.Proxy
 
         private async Task Transmit(Stream from, Stream to, byte[] buffer)
         {
-            await from.ReadAsync(buffer, 0, buffer.Length).ContinueWith(async (alen) =>
+            var len = await from.ReadAsync(buffer, 0, buffer.Length);
+            Console.WriteLine(len);
+            if (len > 0)
             {
-                int len = await alen;
-                Console.WriteLine(len);
-                if (len > 0)
-                {
-                    to.Write(buffer, 0, len);
-                    await Transmit(from, to, buffer);
-                }
-            });
+                to.Write(buffer, 0, len);
+                await Transmit(from, to, buffer);
+            }
         }
 
         private void DirectRelay(Stream localStream, Stream remoteStream)
         {
             byte[] reqBuf = new byte[HttpPackage.BUFFER_LENGTH];
             byte[] resBuf = new byte[HttpPackage.BUFFER_LENGTH];
-
-
-            Task.WhenAll(
+            Task.WaitAll(
                 Transmit(localStream, remoteStream, reqBuf),
                 Transmit(remoteStream, localStream, resBuf));
-
-            //System.Threading.Thread.Sleep(10000);
         }
 
         #region Connect

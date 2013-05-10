@@ -9,10 +9,11 @@ namespace Q.Proxy
 {
     internal static class CAHelper
     {
-        private const string makeCertParamsRoot = "-r -ss root -n \"CN=QProxy, OU=Loye\" -sky signature -cy authority -a sha1 -m 120";
-        private const string makeCertParamsEnd = "-pe -ss my -n \"CN={0}, OU=Loye\" -sky exchange -in \"QProxy\" -is root -cy end -a sha1 -m 120";
-        private const string makeCertSubject = "CN={0}, OU=Loye";
-        private const string makeCertRootDomain = "QProxy";
+        private const string MAKE_CERT_PARAMS_ROOT = "-r -ss root -n \"CN=QProxy, OU=Loye\" -sky signature -cy authority -a sha1 -m 120";
+        private const string MAKE_CERT_PARAMS_END = "-pe -ss my -n \"CN={0}, OU=Loye\" -sky exchange -in \"QProxy\" -is root -cy end -a sha1 -m 120";
+        private const string MAKE_CERT_SUBJECT = "CN={0}, OU=Loye";
+        private const string MAKE_CERT_ROOT_DOMAIN = "QProxy";
+
         private static readonly string MAKECERT_FILENAME = @".\makecert.exe"; //TODO
         private static readonly ConcurrentDictionary<string, X509Certificate2> certificateCache = new ConcurrentDictionary<string, X509Certificate2>();
         private static X509Certificate2 rootCert;
@@ -51,7 +52,7 @@ namespace Q.Proxy
             {
                 caRWLock.EnterReadLock();
                 x509Store.Open(OpenFlags.ReadOnly);
-                string subject = String.Format(makeCertSubject, host);
+                string subject = String.Format(MAKE_CERT_SUBJECT, host);
                 foreach (X509Certificate2 cert in x509Store.Certificates)
                 {
                     if (String.Equals(cert.Subject, subject, StringComparison.OrdinalIgnoreCase))
@@ -84,10 +85,10 @@ namespace Q.Proxy
             {
                 if (rootCert == null)
                 {
-                    rootCert = LoadCertificateFromWindowsStore(makeCertRootDomain, StoreName.Root);
+                    rootCert = LoadCertificateFromWindowsStore(MAKE_CERT_ROOT_DOMAIN, StoreName.Root);
                     if (rootCert == null)
                     {
-                        rootCert = CreateCertificate(makeCertRootDomain, true);
+                        rootCert = CreateCertificate(MAKE_CERT_ROOT_DOMAIN, true);
                         if (rootCert == null)
                         {
                             return null;
@@ -97,7 +98,7 @@ namespace Q.Proxy
             }
             int exitCode = 999;
             string execute = MAKECERT_FILENAME;
-            string parameters = isRoot ? makeCertParamsRoot : String.Format(makeCertParamsEnd, host);
+            string parameters = isRoot ? MAKE_CERT_PARAMS_ROOT : String.Format(MAKE_CERT_PARAMS_END, host);
             try
             {
                 caRWLock.EnterWriteLock();
