@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Q.Proxy;
+using System.IO;
 
 namespace CMDStarter
 {
@@ -12,7 +13,15 @@ namespace CMDStarter
     {
         static void Main(string[] args)
         {
+            //DateTime time1 = DateTime.Now;
+            //for (int i = 0; i < 1000000; i++)
+            //{
+            //}
+            //DateTime time2 = DateTime.Now;
+            //Console.WriteLine(time2 - time1);
+
             new Listener("127.0.0.1", 1000, false).Start();
+
             //new Listener("127.0.0.1", 1000, "127.0.0.1", 8888, false).Start();
 
             //            var s = new HttpPackageStream(new Uri("https://pxy.apphb.com/miner"), "www.baidu.com", 80, new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8888));

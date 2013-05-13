@@ -75,6 +75,8 @@ namespace Q.Proxy
             listener.AcceptTcpClientAsync().ContinueWith(async (clientAsync) =>
             {
                 Accept(listener);
+
+                Task endTask = null;
                 using (TcpClient client = await clientAsync)
                 using (NetworkStream networkStream = client.GetStream())
                 {
@@ -96,6 +98,16 @@ namespace Q.Proxy
                             localStream.Dispose();
                         }
                     }
+                }
+
+                // End Tasks
+                if (endTask != null)
+                {
+                    if (endTask.Status == TaskStatus.Created)
+                    {
+                        endTask.Start();
+                    }
+                    await endTask;
                 }
             });
         }

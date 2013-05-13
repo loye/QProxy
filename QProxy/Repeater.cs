@@ -9,6 +9,7 @@ using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Q.Proxy
@@ -24,12 +25,73 @@ namespace Q.Proxy
             this.Proxy = proxy;
         }
 
+        private Task Transmit(Stream fromStream, Stream toStream)
+        {
+            Task task = null;
+            byte[] buffer = new byte[HttpPackage.BUFFER_LENGTH];
+            bool parseHttp = true;
+            using (MemoryStream mem = new MemoryStream())
+            {
+                for (int len = fromStream.Read(buffer, 0, buffer.Length);
+                       len > 0;
+                       len = fromStream.Read(buffer, 0, buffer.Length))
+                {
+                    if (toStream != null)
+                    {
+                        toStream.Write(buffer, 0, len);
+                    }
+                    if (parseHttp)
+                    {
+                        HttpPackage package = null;
+                        mem.Write(buffer, 0, len);
+                        byte[] bin = mem.GetBuffer();
+                        HttpPackage.ValidatePackage(bin, 0, (int)mem.Length, ref package);
+                        if (package != null)
+                        {
+                            if (toStream == null)
+                            {
+                                var requestHeader = package.HttpHeader as Http.HttpRequestHeader;
+                                toStream = this.Connect(ref fromStream, requestHeader);
+                                if (requestHeader.HttpMethod == HttpMethod.Connect)
+                                {
+                                    if (!this.DecryptSSL)
+                                    {
+                                        return Task.Run(() =>
+                                        {
+                                            DirectRelay(fromStream, toStream);
+                                        });
+                                    }
+                                }
+                                else
+                                {
+                                    toStream.Write(bin, 0, (int)mem.Length);
+                                }
+                                task = Task.Run(() =>
+                                {
+                                    Transmit(toStream, fromStream);
+                                });
+                            }
+                            if (IsPackageFinished(package))
+                            {
+                                Console.WriteLine(package.HttpHeader.StartLine);
+                            }
+                        }
+                    }
+                }
+            }
+            return task;
+        }
+
+
         public void Relay(ref Stream localStream)
         {
             byte[] reqBuf = new byte[HttpPackage.BUFFER_LENGTH];
             byte[] resBuf = new byte[HttpPackage.BUFFER_LENGTH];
             Stream remoteStream = null;
 
+            Task task = Transmit(localStream, remoteStream);
+            task.Wait();
+            /*
             for (bool hasRequest = true, requestSent = false; hasRequest && localStream.CanRead; requestSent = false)
             {
                 hasRequest = false;
@@ -101,10 +163,20 @@ namespace Q.Proxy
                         }
                     }
                 }
-            }
+            }*/
         }
 
         #region Private Methods
+
+        //private async Task Transmit(Stream from, Stream to, byte[] buffer)
+        //{
+        //    int len = from.Read(buffer, 0, buffer.Length);
+        //    if (len > 0)
+        //    {
+        //        to.Write(buffer, 0, len);
+        //        await Transmit(from, to, buffer);
+        //    }
+        //}
 
         private bool IsPackageFinished(HttpPackage package)
         {
@@ -121,24 +193,11 @@ namespace Q.Proxy
             return false;
         }
 
-        private async Task Transmit(Stream from, Stream to, byte[] buffer)
-        {
-            var len = await from.ReadAsync(buffer, 0, buffer.Length);
-            Console.WriteLine(len);
-            if (len > 0)
-            {
-                to.Write(buffer, 0, len);
-                await Transmit(from, to, buffer);
-            }
-        }
-
         private void DirectRelay(Stream localStream, Stream remoteStream)
         {
-            byte[] reqBuf = new byte[HttpPackage.BUFFER_LENGTH];
-            byte[] resBuf = new byte[HttpPackage.BUFFER_LENGTH];
             Task.WaitAll(
-                Transmit(localStream, remoteStream, reqBuf),
-                Transmit(remoteStream, localStream, resBuf));
+                localStream.CopyToAsync(remoteStream, HttpPackage.BUFFER_LENGTH),
+                remoteStream.CopyToAsync(localStream, HttpPackage.BUFFER_LENGTH));
         }
 
         #region Connect
@@ -162,10 +221,6 @@ namespace Q.Proxy
 
         private void ConnectBySSL(ref Stream localStream, ref Stream remoteStream, Http.HttpRequestHeader requestHeader)
         {
-            string host = requestHeader.Host;
-            int port = requestHeader.Port;
-            string version = requestHeader.Version;
-
             // Send connect request to http proxy server
             if (this.Proxy != null)
             {
@@ -174,21 +229,20 @@ namespace Q.Proxy
                 HttpPackage response = HttpPackage.Parse(remoteStream);
                 if (response == null || (response.HttpHeader as Http.HttpResponseHeader).StatusCode != 200)
                 {
-                    throw new Exception(String.Format("SwitchToSslStreamAsClient: Connect to proxy server[{0}:{1}] with SSL failed!", host, port));
+                    throw new Exception(String.Format("Connect to proxy server[{0}:{1}] with SSL failed!", requestHeader.Host, requestHeader.Port));
                 }
             }
 
             // Send connected response to local
-            var res = new Http.HttpResponseHeader(200, Http.HttpStatus.Connection_Established, version);
-            res[HttpHeaderKey.Connection] = "close";
+            var res = new Http.HttpResponseHeader(200, Http.HttpStatus.Connection_Established, requestHeader.Version);
             byte[] responseBin = res.ToBinary();
             localStream.Write(responseBin, 0, responseBin.Length);
 
             // Decrypt SSL
             if (this.DecryptSSL)
             {
-                var t1 = SwitchToSslStreamAsClientAsync(remoteStream, host);
-                var t2 = SwitchToSslStreamAsServerAsync(localStream, host);
+                var t1 = SwitchToSslStreamAsClientAsync(remoteStream, requestHeader.Host);
+                var t2 = SwitchToSslStreamAsServerAsync(localStream, requestHeader.Host);
                 Task.WaitAll(t1, t2);
                 remoteStream = t1.Result;
                 localStream = t2.Result;
@@ -204,13 +258,8 @@ namespace Q.Proxy
 
         private async Task<SslStream> SwitchToSslStreamAsServerAsync(Stream stream, string host)
         {
-            SslStream sslStream = null;
-            X509Certificate2 cert = CAHelper.GetCertificate(host);
-            if (cert != null && cert.HasPrivateKey)
-            {
-                sslStream = new SslStream(stream, false);
-                await sslStream.AuthenticateAsServerAsync(cert, false, SslProtocols.Tls, true);
-            }
+            SslStream sslStream = new SslStream(stream, false);
+            await sslStream.AuthenticateAsServerAsync(CAHelper.GetCertificate(host), false, SslProtocols.Tls, true);
             return sslStream;
         }
 
