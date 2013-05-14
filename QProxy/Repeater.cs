@@ -25,16 +25,16 @@ namespace Q.Proxy
             this.Proxy = proxy;
         }
 
-        private Task Transmit(Stream fromStream, Stream toStream)
+        private async Task Transmit(Stream fromStream, Stream toStream)
         {
+            int count = 0;
             Task task = null;
             byte[] buffer = new byte[HttpPackage.BUFFER_LENGTH];
             bool parseHttp = true;
+            HttpPackage package = null;
             using (MemoryStream mem = new MemoryStream())
             {
-                for (int len = fromStream.Read(buffer, 0, buffer.Length);
-                       len > 0;
-                       len = fromStream.Read(buffer, 0, buffer.Length))
+                for (int len = fromStream.Read(buffer, 0, buffer.Length); len > 0; len = fromStream.Read(buffer, 0, buffer.Length))
                 {
                     if (toStream != null)
                     {
@@ -42,7 +42,6 @@ namespace Q.Proxy
                     }
                     if (parseHttp)
                     {
-                        HttpPackage package = null;
                         mem.Write(buffer, 0, len);
                         byte[] bin = mem.GetBuffer();
                         HttpPackage.ValidatePackage(bin, 0, (int)mem.Length, ref package);
@@ -56,127 +55,43 @@ namespace Q.Proxy
                                 {
                                     if (!this.DecryptSSL)
                                     {
-                                        return Task.Run(() =>
-                                        {
-                                            DirectRelay(fromStream, toStream);
-                                        });
+                                        DirectRelay(fromStream, toStream);
+                                        break;
                                     }
                                 }
                                 else
                                 {
                                     toStream.Write(bin, 0, (int)mem.Length);
                                 }
-                                task = Task.Run(() =>
-                                {
-                                    Transmit(toStream, fromStream);
-                                });
+                                task = Task.Run(async () => { await Transmit(toStream, fromStream); });
+                                Console.WriteLine(package.HttpHeader.StartLine);
                             }
                             if (IsPackageFinished(package))
                             {
-                                Console.WriteLine(package.HttpHeader.StartLine);
+                                count++;
+                                //Console.WriteLine(package.HttpHeader.StartLine);
                             }
                         }
                     }
                 }
             }
-            return task;
+            if (task != null)
+            {
+                await task;
+            }
+            Console.WriteLine("Transmit quit with count: " + count);
         }
 
 
-        public void Relay(ref Stream localStream)
+        public async Task Relay(Stream localStream)
         {
-            byte[] reqBuf = new byte[HttpPackage.BUFFER_LENGTH];
-            byte[] resBuf = new byte[HttpPackage.BUFFER_LENGTH];
-            Stream remoteStream = null;
-
-            Task task = Transmit(localStream, remoteStream);
-            task.Wait();
-            /*
-            for (bool hasRequest = true, requestSent = false; hasRequest && localStream.CanRead; requestSent = false)
+            using (Stream remoteStream = null)
             {
-                hasRequest = false;
-                // Request
-                using (MemoryStream mem = new MemoryStream())
-                {
-                    HttpPackage package = null;
-                    for (int len = localStream.Read(reqBuf, 0, reqBuf.Length);
-                        len > 0;
-                        len = localStream.CanRead ? localStream.Read(reqBuf, 0, reqBuf.Length) : 0)
-                    {
-                        hasRequest = true;
-                        if (remoteStream != null)
-                        {
-                            remoteStream.Write(reqBuf, 0, len);
-                            requestSent = true;
-                        }
-
-                        mem.Write(reqBuf, 0, len);
-                        byte[] bin = mem.GetBuffer();
-                        HttpPackage.ValidatePackage(bin, 0, (int)mem.Length, ref package);
-                        if (package != null)
-                        {
-                            // connect & send buffered bytes
-                            if (remoteStream == null)
-                            {
-                                var requestHeader = package.HttpHeader as Http.HttpRequestHeader;
-                                remoteStream = this.Connect(ref localStream, requestHeader);
-                                if (requestHeader.HttpMethod == HttpMethod.Connect)
-                                {
-                                    if (!this.DecryptSSL)
-                                    {
-                                        this.DirectRelay(localStream, remoteStream);
-                                        return;
-                                    }
-                                    break;
-                                }
-                                else
-                                {
-                                    remoteStream.Write(bin, 0, (int)mem.Length);
-                                    requestSent = true;
-                                }
-                            }
-                            if (IsPackageFinished(package))
-                            {
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                // Response
-                if (requestSent && remoteStream.CanRead && localStream.CanWrite)
-                {
-                    using (MemoryStream mem = new MemoryStream())
-                    {
-                        HttpPackage package = null;
-                        for (int len = remoteStream.Read(resBuf, 0, resBuf.Length);
-                            len > 0;
-                            len = remoteStream.CanRead ? remoteStream.Read(resBuf, 0, resBuf.Length) : 0)
-                        {
-                            localStream.Write(resBuf, 0, len);
-                            mem.Write(resBuf, 0, len);
-                            byte[] bin = mem.GetBuffer();
-                            if (HttpPackage.ValidatePackage(bin, 0, (int)mem.Length, ref package) && IsPackageFinished(package))
-                            {
-                                break;
-                            }
-                        }
-                    }
-                }
-            }*/
+                await Transmit(localStream, remoteStream);
+            }
         }
 
         #region Private Methods
-
-        //private async Task Transmit(Stream from, Stream to, byte[] buffer)
-        //{
-        //    int len = from.Read(buffer, 0, buffer.Length);
-        //    if (len > 0)
-        //    {
-        //        to.Write(buffer, 0, len);
-        //        await Transmit(from, to, buffer);
-        //    }
-        //}
 
         private bool IsPackageFinished(HttpPackage package)
         {
@@ -209,7 +124,7 @@ namespace Q.Proxy
 
             Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             socket.Connect(endPoint);
-            remoteStream = new NetworkStream(socket, true);
+            remoteStream = new NetworkStream(socket, false);
 
             if (requestHeader.HttpMethod == HttpMethod.Connect)
             {

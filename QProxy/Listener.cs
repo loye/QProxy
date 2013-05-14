@@ -80,23 +80,15 @@ namespace Q.Proxy
                 using (TcpClient client = await clientAsync)
                 using (NetworkStream networkStream = client.GetStream())
                 {
-                    Stream localStream = networkStream;
                     try
                     {
                         Console.WriteLine("request begin");
-                        m_repeater.Relay(ref localStream);
+                        await m_repeater.Relay(networkStream);
                         Console.WriteLine("request end");
                     }
                     catch (Exception ex)
                     {
                         Logger.PublishException(ex);
-                    }
-                    finally
-                    {
-                        if (localStream != null)
-                        {
-                            localStream.Dispose();
-                        }
                     }
                 }
 

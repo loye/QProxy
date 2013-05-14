@@ -31,7 +31,7 @@ namespace Q.Proxy
             IPAddress address;
             if (!TryGetHostAddress(host, out address))
             {
-                throw new Exception("DNS lookup failed!");
+                throw new Exception(String.Format("DNS lookup failed for host: {0}.", host));
             }
             return address;
         }
