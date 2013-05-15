@@ -12,6 +12,7 @@ namespace Q.Http
         public const string Content_Length = "Content-Length";
         public const string Transfer_Encoding = "Transfer-Encoding";
         public const string Connection = "Connection";
+        public const string Proxy_Connection = "Proxy-Connection";
     }
 
     public sealed class HttpMethod

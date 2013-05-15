@@ -20,9 +20,9 @@ namespace CMDStarter
             //DateTime time2 = DateTime.Now;
             //Console.WriteLine(time2 - time1);
 
-            new Listener("127.0.0.1", 1000, false).Start();
+            //new Listener("127.0.0.1", 1000, true).Start();
 
-            //new Listener("127.0.0.1", 1000, "127.0.0.1", 8888, false).Start();
+            new Listener("127.0.0.1", 1000, "127.0.0.1", 8888, true).Start();
 
             //            var s = new HttpPackageStream(new Uri("https://pxy.apphb.com/miner"), "www.baidu.com", 80, new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8888));
 

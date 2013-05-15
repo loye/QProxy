@@ -36,7 +36,6 @@ namespace Q.Http
 
         public async Task<Stream> ConnectAsClientAsync(Stream remoteStream, string host, int port, IPEndPoint proxy, bool decryptSSL)
         {
-            Stream resultStream = remoteStream;
             // Send connect request to http proxy server
             if (proxy != null)
             {
@@ -51,21 +50,20 @@ namespace Q.Http
             // Decrypt SSL
             if (decryptSSL)
             {
-                resultStream = await SwitchToSslStreamAsClientAsync(remoteStream, host);
+                remoteStream = await SwitchToSslStreamAsClientAsync(remoteStream, host);
             }
-            return resultStream;
+            return remoteStream;
         }
 
         public async Task<Stream> ConnectAsServerAsync(Stream localStream, string host, bool decryptSSL)
         {
-            Stream resultStream = localStream;
             // Send connected response to local
             byte[] responseBin = new Http.HttpResponseHeader(200, Http.HttpStatus.Connection_Established).ToBinary();
             localStream.Write(responseBin, 0, responseBin.Length);
             // Decrypt SSL
             if (decryptSSL)
             {
-                resultStream = await SwitchToSslStreamAsClientAsync(localStream, host);
+                localStream = await SwitchToSslStreamAsServerAsync(localStream, host);
             }
             return localStream;
         }
