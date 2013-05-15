@@ -16,10 +16,9 @@ namespace Q.Proxy
 
         private Repeater m_repeater;
 
-
         public IPEndPoint Proxy { get; private set; }
 
-        public bool DecryptSSL { get; private set; }
+        #region Constructors
 
         public Listener(string ip, int port, bool decryptSSL = false)
             : this(new IPEndPoint(IPAddress.Parse(ip), port), decryptSSL)
@@ -36,11 +35,11 @@ namespace Q.Proxy
         public Listener(IPEndPoint endPoint, IPEndPoint proxy, bool decryptSSL = false)
         {
             this.Proxy = proxy;
-            this.DecryptSSL = decryptSSL;
             m_tcpListener = new TcpListener(endPoint);
-            m_repeater = new Repeater(this.Proxy);
-            m_repeater.DecryptSSL = this.DecryptSSL;
+            m_repeater = new HttpRepeater(proxy, decryptSSL);
         }
+
+        #endregion
 
         public Listener Start()
         {
@@ -76,30 +75,19 @@ namespace Q.Proxy
             {
                 Accept(listener);
 
-                Task endTask = null;
                 using (TcpClient client = await clientAsync)
                 using (NetworkStream networkStream = client.GetStream())
                 {
                     try
                     {
                         Console.WriteLine("request begin");
-                        await m_repeater.Relay(networkStream);
+                        m_repeater.Relay(networkStream);
                         Console.WriteLine("request end");
                     }
                     catch (Exception ex)
                     {
                         Logger.PublishException(ex);
                     }
-                }
-
-                // End Tasks
-                if (endTask != null)
-                {
-                    if (endTask.Status == TaskStatus.Created)
-                    {
-                        endTask.Start();
-                    }
-                    await endTask;
                 }
             });
         }

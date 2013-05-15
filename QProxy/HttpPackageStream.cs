@@ -1,11 +1,12 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using System.Net.Security;
+using System.Net.Sockets;
 using Q.Http;
 
 namespace Q.Proxy
 {
-    [Obsolete]
     public class HttpPackageStream : Stream
     {
         public Guid Id { get; private set; }
@@ -16,9 +17,9 @@ namespace Q.Proxy
 
         public int Port { get; private set; }
 
-        public Stream InnerStream { get; protected set; }
+        public NetworkStream InnerStream { get; protected set; }
 
-        public HttpPackageStream(string url, string host, int port, System.Net.IPEndPoint proxy = null)
+        public HttpPackageStream(string url, string host, int port, IPEndPoint proxy = null)
         {
             Uri destination = new Uri(url);
             IPEndPoint endPoint = proxy != null ? proxy : new IPEndPoint(DnsHelper.GetHostAddress(destination.Host), destination.Port);
@@ -27,11 +28,33 @@ namespace Q.Proxy
             this.Url = destination;
             this.Host = host;
             this.Port = port;
-            this.InnerStream = destination.Scheme == Uri.UriSchemeHttps
-                ? new HttpsStream(endPoint, destination.Host, destination.Port, proxy != null)
-                : new HttpStream(endPoint);
+
+            Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            socket.Connect(endPoint);
+            NetworkStream networkStream = new NetworkStream(socket, true);
+            if (destination.Scheme == Uri.UriSchemeHttps)
+            {
+                if (proxy != null)
+                {
+                    var requestHeader = new Http.HttpRequestHeader(HttpMethod.Connect, destination.Host, destination.Port);
+                    HttpPackage response = HttpPackage.Parse(networkStream);
+                    if (response == null || (response.HttpHeader as Http.HttpResponseHeader).StatusCode != 200)
+                    {
+                        throw new Exception(String.Format("Connect to proxy server[{0}:{1}] with SSL failed!", requestHeader.Host, requestHeader.Port));
+                    }
+                }
+                SslStream ssltream = new SslStream(networkStream, false);
+                ssltream.AuthenticateAsClient(destination.Host);
+            }
+            this.InnerStream = networkStream;
         }
 
+        private Stream Connect(string host, int port, IPEndPoint proxy)
+        {
+            return null;
+        }
+
+      
         private Http.HttpRequestHeader NewRequestHeader()
         {
             var httpHeader = new Http.HttpRequestHeader(HttpMethod.POST, this.Url.ToString(), this.Url.Host, this.Url.Port);
@@ -43,6 +66,28 @@ namespace Q.Proxy
 
 
         #region implements of Stream
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+
+
+
+
+
+            return this.InnerStream.Read(buffer, offset, count);
+        }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            if (count > 0 && offset + count <= buffer.Length)
+            {
+                var httpHeader = this.NewRequestHeader();
+                httpHeader.ContentLength = count;
+                byte[] bin = httpHeader.ToBinary();
+                this.InnerStream.Write(bin, 0, bin.Length);
+                this.InnerStream.Write(buffer, offset, count);
+            }
+        }
 
         public override bool CanRead
         {
@@ -81,14 +126,6 @@ namespace Q.Proxy
             }
         }
 
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-
-
-
-            return this.InnerStream.Read(buffer, offset, count);
-        }
-
         public override long Seek(long offset, SeekOrigin origin)
         {
             return this.InnerStream.Seek(offset, origin);
@@ -97,15 +134,6 @@ namespace Q.Proxy
         public override void SetLength(long value)
         {
             this.InnerStream.SetLength(value);
-        }
-
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            var httpHeader = this.NewRequestHeader();
-            httpHeader.ContentLength = count;
-            byte[] bin = httpHeader.ToBinary();
-            this.InnerStream.Write(bin, 0, bin.Length);
-            this.InnerStream.Write(buffer, offset, count);
         }
 
         protected override void Dispose(bool disposing)

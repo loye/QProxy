@@ -5,7 +5,7 @@ using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 
-namespace Q.Proxy
+namespace Q
 {
     internal static class CAHelper
     {
@@ -23,7 +23,7 @@ namespace Q.Proxy
         {
             if (String.IsNullOrEmpty(host))
             {
-                return null;
+                throw new Exception("Create Certification: Failed. Host can't be null or empty");
             }
             if (certificateCache.ContainsKey(host))
             {
@@ -31,18 +31,15 @@ namespace Q.Proxy
             }
 
             X509Certificate2 domainCert = LoadCertificateFromWindowsStore(host);
-            if (domainCert != null)
+            if (domainCert == null)
             {
-                return domainCert;
+                domainCert = CreateCertificate(host);
             }
-            domainCert = CreateCertificate(host);
             if (domainCert != null)
             {
                 certificateCache[host] = domainCert;
-                return domainCert;
             }
-
-            return null;
+            return domainCert;
         }
 
         private static X509Certificate2 LoadCertificateFromWindowsStore(string host, StoreName storeName = StoreName.My)
@@ -77,8 +74,7 @@ namespace Q.Proxy
         {
             if (String.IsNullOrEmpty(MAKECERT_FILENAME) || !File.Exists(MAKECERT_FILENAME))
             {
-                Logger.Error("Create Certification: Failed. Can't find makecert.exe");
-                return null;
+                throw new Exception("Create Certification: Failed. Can't find makecert.exe");
             }
             X509Certificate2 cert = null;
             if (!isRoot)
@@ -91,7 +87,7 @@ namespace Q.Proxy
                         rootCert = CreateCertificate(MAKE_CERT_ROOT_DOMAIN, true);
                         if (rootCert == null)
                         {
-                            return null;
+                            throw new Exception("Create Certification: Failed. Can't find root certification");
                         }
                     }
                 }
@@ -125,14 +121,10 @@ namespace Q.Proxy
             if (exitCode == 0)
             {
                 cert = LoadCertificateFromWindowsStore(host);
-                if (cert == null)
-                {
-                    Logger.Error("Create Certification: Failed.");
-                }
-                else
-                {
-                    Logger.Message(String.Format("Create Certification: {0}", cert.Subject), 1, ConsoleColor.DarkYellow);
-                }
+            }
+            if (cert == null)
+            {
+                throw new Exception("Create Certification: Failed.");
             }
             return cert;
         }

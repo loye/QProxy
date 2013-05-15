@@ -59,14 +59,14 @@ namespace Q.Http
                 HttpHeader header;
                 if (HttpHeader.TryParse(source, startIndex, length, out header))
                 {
-                    int headerLength = header.Length;
-                    package = new HttpPackage(header, new HttpContent(source, startIndex + headerLength, length - headerLength));
+                    package = new HttpPackage(header, new HttpContent(source, startIndex + header.Length, length - header.Length));
                 }
             }
             if (package != null)
             {
-                package.HttpContent = new HttpContent(source, startIndex + package.HttpHeader.Length, length - package.HttpHeader.Length);
-                isValid = package.HttpContent.Validate(package.HttpHeader.ContentLength);
+                isValid = package.HttpContent
+                    .Refresh(source, startIndex + package.HttpHeader.Length, length - package.HttpHeader.Length)
+                    .Validate(package.HttpHeader.ContentLength);
                 package.IsValid = isValid;
             }
             return isValid;

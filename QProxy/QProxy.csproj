@@ -39,19 +39,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CAHelper.cs" />
+    <Compile Include="Q\CAHelper.cs" />
     <Compile Include="DnsHelper.cs" />
     <Compile Include="EncryptionProvider.cs" />
+    <Compile Include="HttpRepeater.cs" />
     <Compile Include="Http\HttpContent.cs" />
     <Compile Include="Http\HttpHeader.cs" />
     <Compile Include="Http\HttpHeaderItem.cs" />
     <Compile Include="Http\HttpPackage.cs" />
     <Compile Include="Http\HttpRequestHeader.cs" />
     <Compile Include="Http\HttpResponseHeader.cs" />
-    <Compile Include="Http\HttpsStream.cs" />
-    <Compile Include="Http\HttpStream.cs" />
+    <Compile Include="Http\HttpsConnector.cs" />
     <Compile Include="Listener.cs" />
-    <Compile Include="Logger.cs" />
+    <Compile Include="Q\Logger.cs" />
     <Compile Include="Repeater.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="HttpPackageStream.cs" />

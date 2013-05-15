@@ -28,11 +28,14 @@ namespace Q.Http
             }
         }
 
-        //public HttpContent Append(int length)
-        //{
-        //    m_length = Math.Min(m_binary.Length - m_startIndex, length);
-        //    return this;
-        //}
+        public HttpContent Refresh(byte[] content, int startIndex, int length)
+        {
+            m_chunkedNextBlockOffset = m_startIndex == startIndex ? m_chunkedNextBlockOffset : startIndex;
+            m_binary = content;
+            m_startIndex = startIndex;
+            m_length = length >= 0 || m_binary == null ? length : m_binary.Length - startIndex;
+            return this;
+        }
 
         public bool Validate(int expectLength)
         {

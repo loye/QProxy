@@ -43,7 +43,10 @@ namespace CMDStarter
             //            s.Write(bin, 0, bin.Length);
 
             Console.WriteLine("Started");
-            var key = Console.ReadKey().Key;
+            while (true)
+            {
+                var key = Console.ReadKey().Key;
+            }
         }
     }
 }
