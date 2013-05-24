@@ -29,11 +29,10 @@ namespace Q.Proxy
 
         private int Transmit(Stream fromStream, Stream toStream)
         {
+            byte[] buffer = new byte[HttpPackage.BUFFER_LENGTH];
             int count = 0;
             Task task = null;
-            bool parseHttp = true;
             bool headerComplete = false;
-            byte[] buffer = new byte[HttpPackage.BUFFER_LENGTH];
             HttpPackage package = null;
             MemoryStream mem = new MemoryStream();
 
@@ -43,62 +42,54 @@ namespace Q.Proxy
                 {
                     toStream.Write(buffer, 0, len);
                 }
-                // Parse Http
-                if (parseHttp)
+                mem.Write(buffer, 0, len);
+                byte[] bin = mem.GetBuffer();
+                HttpPackage.ValidatePackage(bin, 0, (int)mem.Length, ref package);
+                if (package != null)
                 {
-                    mem.Write(buffer, 0, len);
-                    byte[] bin = mem.GetBuffer();
-                    HttpPackage.ValidatePackage(bin, 0, (int)mem.Length, ref package);
-                    if (package != null)
+                    if (!headerComplete)
                     {
-                        if (!headerComplete)
+                        headerComplete = true;
+                        var requestHeader = package.HttpHeader as Http.HttpRequestHeader;
+                        if (requestHeader != null)
                         {
-                            headerComplete = true;
-                            var requestHeader = package.HttpHeader as Http.HttpRequestHeader;
-                            if (requestHeader != null)
+                            if (this.Proxy == null && requestHeader[HttpHeaderKey.Proxy_Connection] == "keep-alive")
                             {
-                                if (requestHeader[HttpHeaderKey.Proxy_Connection] == "keep-alive")
+                                requestHeader[HttpHeaderKey.Proxy_Connection] = null;
+                                requestHeader[HttpHeaderKey.Connection] = "keep-alive";
+                            }
+                            if (toStream == null)
+                            {
+                                toStream = this.Connect(ref fromStream, requestHeader);
+                                if (requestHeader.HttpMethod == HttpMethod.Connect)
                                 {
-                                    //if (this.Proxy == null)
-                                    //{
-                                    //    requestHeader[HttpHeaderKey.Proxy_Connection] = null;
-                                    //    requestHeader[HttpHeaderKey.Connection] = "keep-alive";
-                                    //}
+                                    if (!this.DecryptSSL)
+                                    {
+                                        DirectRelay(fromStream, toStream);
+                                        break;
+                                    }
                                 }
-
-                                if (toStream == null)
+                                else
                                 {
-                                    toStream = this.Connect(ref fromStream, requestHeader);
-                                    if (requestHeader.HttpMethod == HttpMethod.Connect)
-                                    {
-                                        if (!this.DecryptSSL)
-                                        {
-                                            DirectRelay(fromStream, toStream);
-                                            break;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        byte[] reqBin = package.ToBinary();
-                                        toStream.Write(reqBin, 0, reqBin.Length);
-                                    }
-                                    task = Task.Run(() =>
-                                    {
-                                        Transmit(toStream, fromStream);
-                                    });
+                                    byte[] reqBin = package.ToBinary();
+                                    toStream.Write(reqBin, 0, reqBin.Length);
                                 }
+                                task = Task.Run(() =>
+                                {
+                                    Transmit(toStream, fromStream);
+                                });
                             }
                         }
+                    }
 
-                        if (IsPackageFinished(package))
-                        {
-                            Console.WriteLine(package.HttpHeader);
-                            count++;
-                            package = null;
-                            headerComplete = false;
-                            mem.Dispose();
-                            mem = new MemoryStream();
-                        }
+                    if (IsPackageCompleted(package))
+                    {
+                        Console.WriteLine(package.HttpHeader);
+                        count++;
+                        package = null;
+                        headerComplete = false;
+                        mem.Dispose();
+                        mem = new MemoryStream();
                     }
                 }
             }
@@ -111,7 +102,7 @@ namespace Q.Proxy
             return count;
         }
 
-        private bool IsPackageFinished(HttpPackage package)
+        private bool IsPackageCompleted(HttpPackage package)
         {
             if (package != null && package.IsValid)
             {
@@ -138,8 +129,6 @@ namespace Q.Proxy
                 remoteStream.CopyToAsync(localStream, HttpPackage.BUFFER_LENGTH));
         }
 
-        #region Connect
-
         private Stream Connect(ref Stream localStream, Http.HttpRequestHeader requestHeader)
         {
             IPEndPoint endPoint = this.Proxy ?? new IPEndPoint(DnsHelper.GetHostAddress(requestHeader.Host), requestHeader.Port);
@@ -157,8 +146,6 @@ namespace Q.Proxy
             }
             return remoteStream;
         }
-
-        #endregion
 
         #endregion
     }
