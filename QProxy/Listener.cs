@@ -80,9 +80,7 @@ namespace Q.Proxy
                 {
                     try
                     {
-                        Console.WriteLine("request begin");
                         m_repeater.Relay(networkStream);
-                        Console.WriteLine("request end");
                     }
                     catch (Exception ex)
                     {

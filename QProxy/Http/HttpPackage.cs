@@ -13,10 +13,42 @@ namespace Q.Http
 
         public bool IsValid { get; private set; }
 
+        public bool IsCompleted
+        {
+            get
+            {
+                if (this.IsValid)
+                {
+                    if (this.HttpHeader is Http.HttpRequestHeader
+                        && (this.HttpHeader as Http.HttpRequestHeader).HttpMethod == HttpMethod.Connect)
+                    {
+                        return true;
+                    }
+                    if (this.HttpHeader.ContentLength == 0
+                         && String.Compare(this.HttpHeader[HttpHeaderKey.Connection], "close", true) == 0)
+                    {
+                        return false;
+                    }
+                    return true;
+                }
+                return false;
+            }
+        }
+
         public HttpPackage(HttpHeader httpHeader, HttpContent httpContent)
         {
             this.HttpHeader = httpHeader;
             this.HttpContent = httpContent;
+        }
+
+        public byte[] ToBinary()
+        {
+            byte[] headerBin = this.HttpHeader.ToBinary();
+            byte[] contentBin = this.HttpContent.ToBinary();
+            byte[] bin = new byte[headerBin.Length + contentBin.Length];
+            Array.Copy(headerBin, bin, headerBin.Length);
+            Array.Copy(contentBin, 0, bin, headerBin.Length, contentBin.Length);
+            return bin;
         }
 
         public static HttpPackage Parse(Stream stream)
@@ -70,16 +102,6 @@ namespace Q.Http
                 package.IsValid = isValid;
             }
             return isValid;
-        }
-
-        public byte[] ToBinary()
-        {
-            byte[] headerBin = this.HttpHeader.ToBinary();
-            byte[] contentBin = this.HttpContent.ToBinary();
-            byte[] bin = new byte[headerBin.Length + contentBin.Length];
-            Array.Copy(headerBin, bin, headerBin.Length);
-            Array.Copy(contentBin, 0, bin, headerBin.Length, contentBin.Length);
-            return bin;
         }
 
     }

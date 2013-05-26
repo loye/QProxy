@@ -8,7 +8,7 @@ namespace Q.Proxy
 {
     public sealed class HttpHeaderCustomKey
     {
-        private const string CustomPrefix = "SCV-";
+        private const string CustomPrefix = "Q-";
 
         public const string Id = CustomPrefix + "Id";
         public const string Host = CustomPrefix + "Host";

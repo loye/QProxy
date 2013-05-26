@@ -21,16 +21,14 @@ namespace Q.Proxy
 
         public override void Relay(Stream localStream)
         {
-            int requestCount = Transmit(localStream, null);
-            Console.WriteLine(requestCount);
+            Transmit(localStream, null);
         }
 
         #region Private Methods
 
-        private int Transmit(Stream fromStream, Stream toStream)
+        private void Transmit(Stream fromStream, Stream toStream)
         {
             byte[] buffer = new byte[HttpPackage.BUFFER_LENGTH];
-            int count = 0;
             Task task = null;
             bool headerComplete = false;
             HttpPackage package = null;
@@ -43,21 +41,20 @@ namespace Q.Proxy
                     toStream.Write(buffer, 0, len);
                 }
                 mem.Write(buffer, 0, len);
-                byte[] bin = mem.GetBuffer();
-                HttpPackage.ValidatePackage(bin, 0, (int)mem.Length, ref package);
+                HttpPackage.ValidatePackage(mem.GetBuffer(), 0, (int)mem.Length, ref package);
                 if (package != null)
                 {
                     if (!headerComplete)
                     {
                         headerComplete = true;
-                        var requestHeader = package.HttpHeader as Http.HttpRequestHeader;
-                        if (requestHeader != null)
+                        if (package.HttpHeader is Http.HttpRequestHeader)
                         {
-                            if (this.Proxy == null && requestHeader[HttpHeaderKey.Proxy_Connection] == "keep-alive")
-                            {
-                                requestHeader[HttpHeaderKey.Proxy_Connection] = null;
-                                requestHeader[HttpHeaderKey.Connection] = "keep-alive";
-                            }
+                            var requestHeader = package.HttpHeader as Http.HttpRequestHeader;
+                            //if (this.Proxy == null && requestHeader[HttpHeaderKey.Proxy_Connection] == "keep-alive")
+                            //{
+                            //    requestHeader[HttpHeaderKey.Proxy_Connection] = null;
+                            //    requestHeader[HttpHeaderKey.Connection] = "keep-alive";
+                            //}
                             if (toStream == null)
                             {
                                 toStream = this.Connect(ref fromStream, requestHeader);
@@ -68,58 +65,39 @@ namespace Q.Proxy
                                         DirectRelay(fromStream, toStream);
                                         break;
                                     }
+                                    else
+                                    {
+                                        task = Task.Run(() => { Transmit(toStream, fromStream); });
+                                        headerComplete = false;
+                                        package = null;
+                                        mem.Dispose();
+                                        mem = new MemoryStream();
+                                        continue;
+                                    }
                                 }
                                 else
                                 {
                                     byte[] reqBin = package.ToBinary();
                                     toStream.Write(reqBin, 0, reqBin.Length);
+                                    task = Task.Run(() => { Transmit(toStream, fromStream); });
                                 }
-                                task = Task.Run(() =>
-                                {
-                                    Transmit(toStream, fromStream);
-                                });
                             }
                         }
                     }
 
-                    if (IsPackageCompleted(package))
+                    if (package.IsCompleted)
                     {
                         Console.WriteLine(package.HttpHeader);
-                        count++;
-                        package = null;
-                        headerComplete = false;
                         mem.Dispose();
-                        mem = new MemoryStream();
+                        break;
                     }
                 }
-            }
+            } // end of for
 
             if (task != null)
             {
                 task.Wait();
-                toStream.Dispose();
             }
-            return count;
-        }
-
-        private bool IsPackageCompleted(HttpPackage package)
-        {
-            if (package != null && package.IsValid)
-            {
-                if (package.HttpHeader is Http.HttpRequestHeader
-                    && (package.HttpHeader as Http.HttpRequestHeader).HttpMethod == HttpMethod.Connect)
-                {
-                    return true;
-                }
-                if (package.HttpHeader.ContentLength == 0
-                     && String.Compare(package.HttpHeader[HttpHeaderKey.Connection], "close", true) == 0)
-                {
-                    Console.WriteLine("Connection: close");
-                    return false;
-                }
-                return true;
-            }
-            return false;
         }
 
         private void DirectRelay(Stream localStream, Stream remoteStream)
@@ -135,7 +113,6 @@ namespace Q.Proxy
             Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             socket.Connect(endPoint);
             Stream remoteStream = new NetworkStream(socket, true);
-
             if (requestHeader.HttpMethod == HttpMethod.Connect)
             {
                 var remoteTask = HttpsConnector.Instance.ConnectAsClientAsync(remoteStream, requestHeader.Host, requestHeader.Port, this.Proxy, this.DecryptSSL);

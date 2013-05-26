@@ -12,6 +12,8 @@ namespace Q.Http
 
         private int m_chunkedNextBlockOffset;
 
+        public int Length { get { return m_length; } }
+
         public HttpContent(byte[] content, int startIndex, int length)
         {
             m_binary = content;

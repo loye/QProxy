@@ -7,46 +7,47 @@ using Q.Http;
 
 namespace Q.Proxy
 {
-    public class HttpPackageStream : Stream
+    public class HttpStream : Stream
     {
         public Guid Id { get; private set; }
 
-        public Uri Url { get; private set; }
+        public Uri Destination { get; private set; }
 
         public string Host { get; private set; }
 
         public int Port { get; private set; }
 
-        public NetworkStream InnerStream { get; protected set; }
+        public Stream InnerStream { get; protected set; }
 
-        public HttpPackageStream(string url, string host, int port, IPEndPoint proxy = null)
+        public HttpStream(string url, string host, int port, IPEndPoint proxy = null)
         {
             Uri destination = new Uri(url);
             IPEndPoint endPoint = proxy != null ? proxy : new IPEndPoint(DnsHelper.GetHostAddress(destination.Host), destination.Port);
 
             this.Id = Guid.NewGuid();
-            this.Url = destination;
+            this.Destination = destination;
             this.Host = host;
             this.Port = port;
 
             Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             socket.Connect(endPoint);
-            NetworkStream networkStream = new NetworkStream(socket, true);
+            Stream stream = new NetworkStream(socket, true);
             if (destination.Scheme == Uri.UriSchemeHttps)
             {
                 if (proxy != null)
                 {
                     var requestHeader = new Http.HttpRequestHeader(HttpMethod.Connect, destination.Host, destination.Port);
-                    HttpPackage response = HttpPackage.Parse(networkStream);
+                    HttpPackage response = HttpPackage.Parse(stream);
                     if (response == null || (response.HttpHeader as Http.HttpResponseHeader).StatusCode != 200)
                     {
                         throw new Exception(String.Format("Connect to proxy server[{0}:{1}] with SSL failed!", requestHeader.Host, requestHeader.Port));
                     }
                 }
-                SslStream ssltream = new SslStream(networkStream, false);
+                SslStream ssltream = new SslStream(stream, false);
                 ssltream.AuthenticateAsClient(destination.Host);
+                stream = ssltream;
             }
-            this.InnerStream = networkStream;
+            this.InnerStream = stream;
         }
 
         private Stream Connect(string host, int port, IPEndPoint proxy)
@@ -54,10 +55,10 @@ namespace Q.Proxy
             return null;
         }
 
-      
+
         private Http.HttpRequestHeader NewRequestHeader()
         {
-            var httpHeader = new Http.HttpRequestHeader(HttpMethod.POST, this.Url.ToString(), this.Url.Host, this.Url.Port);
+            var httpHeader = new Http.HttpRequestHeader(HttpMethod.POST, this.Destination.ToString(), this.Destination.Host, this.Destination.Port);
             httpHeader[HttpHeaderCustomKey.Id] = this.Id.ToString();
             httpHeader[HttpHeaderCustomKey.Host] = this.Host;
             httpHeader[HttpHeaderCustomKey.Port] = this.Port;
