@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Q.Http
+namespace Q.Net
 {
     public class HttpPackage
     {
@@ -19,8 +19,8 @@ namespace Q.Http
             {
                 if (this.IsValid)
                 {
-                    if (this.HttpHeader is Http.HttpRequestHeader
-                        && (this.HttpHeader as Http.HttpRequestHeader).HttpMethod == HttpMethod.Connect)
+                    if (this.HttpHeader is Net.HttpRequestHeader
+                        && (this.HttpHeader as Net.HttpRequestHeader).HttpMethod == HttpMethod.Connect)
                     {
                         return true;
                     }

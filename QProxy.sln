@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QProxy", "QProxy\QProxy.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMDStarter", "CMDStarter\CMDStarter.csproj", "{3A1FBDCE-14C9-4E94-B64B-BF324A70534F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpStreamEndPoint", "HttpStreamEndPoint\HttpStreamEndPoint.csproj", "{64E17E42-06D9-431D-9F05-36EA70893601}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +21,10 @@ Global
 		{3A1FBDCE-14C9-4E94-B64B-BF324A70534F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3A1FBDCE-14C9-4E94-B64B-BF324A70534F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3A1FBDCE-14C9-4E94-B64B-BF324A70534F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64E17E42-06D9-431D-9F05-36EA70893601}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64E17E42-06D9-431D-9F05-36EA70893601}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64E17E42-06D9-431D-9F05-36EA70893601}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64E17E42-06D9-431D-9F05-36EA70893601}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

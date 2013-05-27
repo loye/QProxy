@@ -3,9 +3,9 @@ using System.IO;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
-using Q.Http;
+using Q.Net;
 
-namespace Q.Proxy
+namespace Q.Net
 {
     public class HttpStream : Stream
     {
@@ -36,9 +36,9 @@ namespace Q.Proxy
             {
                 if (proxy != null)
                 {
-                    var requestHeader = new Http.HttpRequestHeader(HttpMethod.Connect, destination.Host, destination.Port);
+                    var requestHeader = new Net.HttpRequestHeader(HttpMethod.Connect, destination.Host, destination.Port);
                     HttpPackage response = HttpPackage.Parse(stream);
-                    if (response == null || (response.HttpHeader as Http.HttpResponseHeader).StatusCode != 200)
+                    if (response == null || (response.HttpHeader as Net.HttpResponseHeader).StatusCode != 200)
                     {
                         throw new Exception(String.Format("Connect to proxy server[{0}:{1}] with SSL failed!", requestHeader.Host, requestHeader.Port));
                     }
@@ -49,16 +49,10 @@ namespace Q.Proxy
             }
             this.InnerStream = stream;
         }
-
-        private Stream Connect(string host, int port, IPEndPoint proxy)
+        
+        private Net.HttpRequestHeader NewRequestHeader()
         {
-            return null;
-        }
-
-
-        private Http.HttpRequestHeader NewRequestHeader()
-        {
-            var httpHeader = new Http.HttpRequestHeader(HttpMethod.POST, this.Destination.ToString(), this.Destination.Host, this.Destination.Port);
+            var httpHeader = new Net.HttpRequestHeader(HttpMethod.POST, this.Destination.ToString(), this.Destination.Host, this.Destination.Port);
             httpHeader[HttpHeaderCustomKey.Id] = this.Id.ToString();
             httpHeader[HttpHeaderCustomKey.Host] = this.Host;
             httpHeader[HttpHeaderCustomKey.Port] = this.Port;

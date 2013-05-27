@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace Q.Http
+namespace Q.Net
 {
     public class HttpHeaderItem
     {

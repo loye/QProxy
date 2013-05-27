@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Q.Http
+namespace Q.Net
 {
     public abstract class HttpHeader : IEnumerable<HttpHeaderItem>
     {

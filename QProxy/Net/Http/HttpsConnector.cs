@@ -8,7 +8,7 @@ using System.Security.Authentication;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Q.Http
+namespace Q.Net
 {
     public class HttpsConnector
     {
@@ -39,10 +39,10 @@ namespace Q.Http
             // Send connect request to http proxy server
             if (proxy != null)
             {
-                byte[] requestBin = new Http.HttpRequestHeader(HttpMethod.Connect, host, port).ToBinary();
+                byte[] requestBin = new Net.HttpRequestHeader(HttpMethod.Connect, host, port).ToBinary();
                 remoteStream.Write(requestBin, 0, requestBin.Length);
                 HttpPackage response = HttpPackage.Parse(remoteStream);
-                if (response == null || (response.HttpHeader as Http.HttpResponseHeader).StatusCode != 200)
+                if (response == null || (response.HttpHeader as Net.HttpResponseHeader).StatusCode != 200)
                 {
                     throw new Exception(String.Format("Connect to proxy server[{0}:{1}] with SSL failed!", host, port));
                 }
@@ -58,7 +58,7 @@ namespace Q.Http
         public async Task<Stream> ConnectAsServerAsync(Stream localStream, string host, bool decryptSSL)
         {
             // Send connected response to local
-            byte[] responseBin = new Http.HttpResponseHeader(200, Http.HttpStatus.Connection_Established).ToBinary();
+            byte[] responseBin = new Net.HttpResponseHeader(200, Net.HttpStatus.Connection_Established).ToBinary();
             localStream.Write(responseBin, 0, responseBin.Length);
             // Decrypt SSL
             if (decryptSSL)

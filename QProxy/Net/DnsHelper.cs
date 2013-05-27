@@ -5,7 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
 
-namespace Q.Proxy
+namespace Q.Net
 {
     public static class DnsHelper
     {

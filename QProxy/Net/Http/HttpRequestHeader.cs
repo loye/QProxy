@@ -2,7 +2,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Q.Http
+namespace Q.Net
 {
     public class HttpRequestHeader : HttpHeader
     {

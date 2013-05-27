@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Q.Http
+namespace Q.Net
 {
     public class HttpContent
     {

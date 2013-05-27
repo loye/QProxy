@@ -1,4 +1,4 @@
-﻿using Q.Http;
+﻿using Q.Net;
 using System;
 using System.Collections.Generic;
 using System.IO;
