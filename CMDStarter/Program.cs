@@ -21,29 +21,28 @@ namespace CMDStarter
             //DateTime time2 = DateTime.Now;
             //Console.WriteLine(time2 - time1);
 
-            //new Listener("127.0.0.1", 1000, true).Start();
+            new Listener("127.0.0.1", 1000, true).Start();
 
-            //new Listener("127.0.0.1", 1000, true).Start();
-            TestHttpStream();
             Console.WriteLine("Started");
             while (true)
             {
+                //TestHttpStream();
                 var key = Console.ReadKey().Key;
             }
         }
 
         private static void TestHttpStream()
         {
-            var s = new HttpStream(new Uri("http://vmnet1.com:1008/httpstream"), "www.baidu.com", 80, new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8888));
-            string source = @"GET http://vmnet1.com:1008/httpstream HTTP/1.1
-Host: vmnet1.com:1008
-          
+            var s = new HttpStream(new Uri("http://localhost:1008/httpstream"), "www.baidu.com", 80, new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8888));
+            string source = @"GET http://www.baidu.com HTTP/1.1
+Host: www.baidu.com
+
 ";
             var bin = ASCIIEncoding.ASCII.GetBytes(source);
 
             s.Write(bin, 0, bin.Length);
 
-            
+
         }
     }
 }

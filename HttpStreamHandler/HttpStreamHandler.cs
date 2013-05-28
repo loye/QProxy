@@ -6,6 +6,7 @@ using System.Web;
 using System.Linq;
 using System.IO;
 using System.Threading.Tasks;
+using System.Text;
 
 namespace Q.Net.Web
 {
@@ -67,6 +68,7 @@ namespace Q.Net.Web
                 for (int len = remoteStream.Read(buffer, 0, buffer.Length); len > 0; len = remoteStream.Read(buffer, 0, buffer.Length))
                 {
                     outputStream.Write(buffer, 0, len);
+                    outputStream.Flush();
                 }
             }
 
