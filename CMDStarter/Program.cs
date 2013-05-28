@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Q.Proxy;
 using System.IO;
+using Q.Net;
 
 namespace CMDStarter
 {
@@ -22,31 +23,27 @@ namespace CMDStarter
 
             //new Listener("127.0.0.1", 1000, true).Start();
 
-            new Listener("127.0.0.1", 1000, true).Start();
-
-            //            var s = new HttpPackageStream(new Uri("https://pxy.apphb.com/miner"), "www.baidu.com", 80, new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8888));
-
-            //            string source = @"GET http://www.baidu.com/ HTTP/1.1
-            //Host: www.baidu.com
-            //Connection: keep-alive
-            //Cache-Control: max-age=0
-            //Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
-            //User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.43 Safari/537.31
-            //DNT: 1
-            //Accept-Encoding: gzip,deflate,sdch
-            //Accept-Language: en-US,zh-CN;q=0.8,en;q=0.6
-            //Accept-Charset: GBK,utf-8;q=0.7,*;q=0.3
-            //Cookie: BAIDUID=7DFEF0F3AC1F50009812F837497B8C34:FG=1; H_PS_PSSID=1435_1944_1788_2209
-            //
-            //";
-            //            var bin = ASCIIEncoding.ASCII.GetBytes(source);
-            //            s.Write(bin, 0, bin.Length);
-
+            //new Listener("127.0.0.1", 1000, true).Start();
+            TestHttpStream();
             Console.WriteLine("Started");
             while (true)
             {
                 var key = Console.ReadKey().Key;
             }
+        }
+
+        private static void TestHttpStream()
+        {
+            var s = new HttpStream(new Uri("http://vmnet1.com:1008/httpstream"), "www.baidu.com", 80, new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8888));
+            string source = @"GET http://vmnet1.com:1008/httpstream HTTP/1.1
+Host: vmnet1.com:1008
+          
+";
+            var bin = ASCIIEncoding.ASCII.GetBytes(source);
+
+            s.Write(bin, 0, bin.Length);
+
+            
         }
     }
 }

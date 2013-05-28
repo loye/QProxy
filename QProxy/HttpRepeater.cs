@@ -87,7 +87,7 @@ namespace Q.Proxy
 
                     if (package.IsCompleted)
                     {
-                        Console.WriteLine(package.HttpHeader);
+                        Console.WriteLine(package.HttpHeader.StartLine);
                         mem.Dispose();
                         break;
                     }

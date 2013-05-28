@@ -11,7 +11,7 @@ namespace Q.Net
     {
         public Guid Id { get; private set; }
 
-        public Uri Destination { get; private set; }
+        public Uri HandlerUri { get; private set; }
 
         public string Host { get; private set; }
 
@@ -19,24 +19,23 @@ namespace Q.Net
 
         public Stream InnerStream { get; protected set; }
 
-        public HttpStream(string url, string host, int port, IPEndPoint proxy = null)
+        public HttpStream(Uri handlerUri, string host, int port, IPEndPoint proxy = null)
         {
-            Uri destination = new Uri(url);
-            IPEndPoint endPoint = proxy != null ? proxy : new IPEndPoint(DnsHelper.GetHostAddress(destination.Host), destination.Port);
+            IPEndPoint endPoint = proxy != null ? proxy : new IPEndPoint(DnsHelper.GetHostAddress(handlerUri.Host), handlerUri.Port);
 
             this.Id = Guid.NewGuid();
-            this.Destination = destination;
+            this.HandlerUri = handlerUri;
             this.Host = host;
             this.Port = port;
 
             Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             socket.Connect(endPoint);
             Stream stream = new NetworkStream(socket, true);
-            if (destination.Scheme == Uri.UriSchemeHttps)
+            if (handlerUri.Scheme == Uri.UriSchemeHttps)
             {
                 if (proxy != null)
                 {
-                    var requestHeader = new Net.HttpRequestHeader(HttpMethod.Connect, destination.Host, destination.Port);
+                    var requestHeader = new Net.HttpRequestHeader(HttpMethod.Connect, handlerUri.Host, handlerUri.Port);
                     HttpPackage response = HttpPackage.Parse(stream);
                     if (response == null || (response.HttpHeader as Net.HttpResponseHeader).StatusCode != 200)
                     {
@@ -44,15 +43,15 @@ namespace Q.Net
                     }
                 }
                 SslStream ssltream = new SslStream(stream, false);
-                ssltream.AuthenticateAsClient(destination.Host);
+                ssltream.AuthenticateAsClient(handlerUri.Host);
                 stream = ssltream;
             }
             this.InnerStream = stream;
         }
-        
+
         private Net.HttpRequestHeader NewRequestHeader()
         {
-            var httpHeader = new Net.HttpRequestHeader(HttpMethod.POST, this.Destination.ToString(), this.Destination.Host, this.Destination.Port);
+            var httpHeader = new Net.HttpRequestHeader(HttpMethod.POST, this.HandlerUri.ToString(), this.HandlerUri.Host, this.HandlerUri.Port);
             httpHeader[HttpHeaderCustomKey.Id] = this.Id.ToString();
             httpHeader[HttpHeaderCustomKey.Host] = this.Host;
             httpHeader[HttpHeaderCustomKey.Port] = this.Port;
@@ -64,7 +63,6 @@ namespace Q.Net
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-
 
 
 

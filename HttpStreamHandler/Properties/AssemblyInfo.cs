@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("HttpStreamEndPoint")]
+[assembly: AssemblyTitle("HttpStreamHandler")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Microsoft")]
-[assembly: AssemblyProduct("HttpStreamEndPoint")]
+[assembly: AssemblyProduct("HttpStreamHandler")]
 [assembly: AssemblyCopyright("Copyright © Microsoft 2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("f545a1f0-8bc1-45e1-bc04-318f84cc277c")]
+[assembly: Guid("039f586c-adc3-47bc-bcdc-9e2c4cda2aec")]
 
 // Version information for an assembly consists of the following four values:
 //
