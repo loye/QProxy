@@ -39,6 +39,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Net\PipeStream.cs" />
     <Compile Include="Q\CAHelper.cs" />
     <Compile Include="Net\DnsHelper.cs" />
     <Compile Include="EncryptionProvider.cs" />
