@@ -44,5 +44,21 @@ Host: www.baidu.com
 
 
         }
+
+        private static void Test1()
+        {
+            string source =
+@"POST http://localhost:1008/httpstream HTTP/1.1
+HOST: localhost:1008
+
+GET http://www.baidu.com HTTP/1.1
+Host: www.baidu.com
+
+";
+            var bin = ASCIIEncoding.ASCII.GetBytes(source);
+
+            
+
+        }
     }
 }

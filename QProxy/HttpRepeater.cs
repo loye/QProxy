@@ -47,9 +47,9 @@ namespace Q.Proxy
                     if (!headerComplete)
                     {
                         headerComplete = true;
-                        if (package.HttpHeader is Net.HttpRequestHeader)
+                        if (package.HttpHeader is Q.Net.HttpRequestHeader)
                         {
-                            var requestHeader = package.HttpHeader as Net.HttpRequestHeader;
+                            var requestHeader = package.HttpHeader as Q.Net.HttpRequestHeader;
                             //if (this.Proxy == null && requestHeader[HttpHeaderKey.Proxy_Connection] == "keep-alive")
                             //{
                             //    requestHeader[HttpHeaderKey.Proxy_Connection] = null;
@@ -107,7 +107,7 @@ namespace Q.Proxy
                 remoteStream.CopyToAsync(localStream, HttpPackage.BUFFER_LENGTH));
         }
 
-        private Stream Connect(ref Stream localStream, Net.HttpRequestHeader requestHeader)
+        private Stream Connect(ref Stream localStream, Q.Net.HttpRequestHeader requestHeader)
         {
             IPEndPoint endPoint = this.Proxy ?? new IPEndPoint(DnsHelper.GetHostAddress(requestHeader.Host), requestHeader.Port);
             Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);

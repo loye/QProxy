@@ -1,12 +1,8 @@
-﻿using System;
+﻿using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 using System.Web;
-using System.Linq;
-using System.IO;
-using System.Threading.Tasks;
-using System.Text;
 
 namespace Q.Net.Web
 {
@@ -39,9 +35,7 @@ namespace Q.Net.Web
             var request = context.Request;
             var response = context.Response;
             response.Headers["Connection"] = "close";
-            response.Write("ABC");
-            response.Flush();
-            response.Write("DEF");
+            response.Write("It's working!");
             response.End();
         }
 
@@ -60,18 +54,19 @@ namespace Q.Net.Web
             using (Stream inputStream = request.InputStream)
             using (Stream outputStream = response.OutputStream)
             {
-                byte[] buffer = new byte[4096];
-                for (int len = inputStream.Read(buffer, 0, buffer.Length); len > 0; len = inputStream.Read(buffer, 0, buffer.Length))
-                {
-                    remoteStream.Write(buffer, 0, len);
-                }
-                for (int len = remoteStream.Read(buffer, 0, buffer.Length); len > 0; len = remoteStream.Read(buffer, 0, buffer.Length))
-                {
-                    outputStream.Write(buffer, 0, len);
-                    outputStream.Flush();
-                }
+                //byte[] buffer = new byte[4096];
+                //for (int len = inputStream.Read(buffer, 0, buffer.Length); len > 0; len = inputStream.Read(buffer, 0, buffer.Length))
+                //{
+                //    remoteStream.Write(buffer, 0, len);
+                //}
+                //for (int len = remoteStream.Read(buffer, 0, buffer.Length); len > 0; len = remoteStream.Read(buffer, 0, buffer.Length))
+                //{
+                //    outputStream.Write(buffer, 0, len);
+                //    //outputStream.Flush();
+                //}
+                inputStream.CopyTo(remoteStream);
+                remoteStream.CopyTo(outputStream);
             }
-
             response.End();
         }
 

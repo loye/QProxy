@@ -16,7 +16,7 @@ namespace Q.Proxy.Net
 
         }
 
-        public Stream EndStream { get; private set; }
+        public Stream InnerStream { get; private set; }
 
 
 
