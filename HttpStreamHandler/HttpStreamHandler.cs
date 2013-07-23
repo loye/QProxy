@@ -50,22 +50,23 @@ namespace Q.Net.Web
             IPEndPoint endPoint = new IPEndPoint(ip, port);  //new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8888);//
             Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             socket.Connect(endPoint);
-            using (Stream remoteStream = new NetworkStream(socket, true))
+
+            response.Headers["Connection"] = "close";
+
+            using (NetworkStream remoteStream = new NetworkStream(socket, true))
             using (Stream inputStream = request.InputStream)
             using (Stream outputStream = response.OutputStream)
             {
-                //byte[] buffer = new byte[4096];
-                //for (int len = inputStream.Read(buffer, 0, buffer.Length); len > 0; len = inputStream.Read(buffer, 0, buffer.Length))
-                //{
-                //    remoteStream.Write(buffer, 0, len);
-                //}
-                //for (int len = remoteStream.Read(buffer, 0, buffer.Length); len > 0; len = remoteStream.Read(buffer, 0, buffer.Length))
-                //{
-                //    outputStream.Write(buffer, 0, len);
-                //    //outputStream.Flush();
-                //}
-                inputStream.CopyTo(remoteStream);
-                remoteStream.CopyTo(outputStream);
+                byte[] buffer = new byte[4096];
+                for (int len = inputStream.Read(buffer, 0, buffer.Length); len > 0; len = inputStream.Read(buffer, 0, buffer.Length))
+                {
+                    remoteStream.Write(buffer, 0, len);
+                }
+                for (int len = remoteStream.Read(buffer, 0, buffer.Length); len > 0; len = remoteStream.Read(buffer, 0, buffer.Length))
+                {
+                    outputStream.Write(buffer, 0, len);
+                    outputStream.Flush();
+                }
             }
             response.End();
         }

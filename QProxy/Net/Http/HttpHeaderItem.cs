@@ -17,8 +17,7 @@ namespace Q.Net
             }
             set
             {
-                m_Items = (m_Items == null || m_Items.Length != 1) ? new string[1] : m_Items;
-                m_Items[0] = value;
+                m_Items = value == null ? null : new string[1] { value };
             }
         }
 
@@ -30,11 +29,11 @@ namespace Q.Net
             }
         }
 
-        public HttpHeaderItem(string key) : this(key, default(string)) { }
+        public HttpHeaderItem(string key) : this(key, (string[])null) { }
 
-        public HttpHeaderItem(string key, string value) : this(key, value == null ? null : new string[] { value }) { }
+        public HttpHeaderItem(string key, string value) : this(key, value == null ? (string[])null : new string[1] { value }) { }
 
-        public HttpHeaderItem(string key, HttpHeaderItem item) : this(key, item == null ? null : item.Values) { }
+        public HttpHeaderItem(string key, HttpHeaderItem item) : this(key, item == null ? (string[])null : item.m_Items) { }
 
         public HttpHeaderItem(string key, string[] values)
         {
@@ -44,12 +43,12 @@ namespace Q.Net
 
         public HttpHeaderItem Add(string value)
         {
-            return Add(new string[] { value });
+            return value == null ? this : Add(new string[] { value });
         }
 
         public HttpHeaderItem Add(HttpHeaderItem item)
         {
-            return item == null ? this : Add(item.Values);
+            return item == null ? this : Add(item.m_Items);
         }
 
         public HttpHeaderItem Add(string[] values)
@@ -76,7 +75,7 @@ namespace Q.Net
         {
             if (m_Items == null || m_Items.Length == 0)
             {
-                return null;
+                return String.Empty;
             }
             if (m_Items.Length == 1)
             {
@@ -90,9 +89,9 @@ namespace Q.Net
             return sb.ToString();
         }
 
-        public static implicit operator string(HttpHeaderItem headerItem)
+        public static implicit operator string(HttpHeaderItem item)
         {
-            return headerItem == null ? null : headerItem.Value;
+            return item == null ? null : item.Value;
         }
 
         public static implicit operator HttpHeaderItem(string value)

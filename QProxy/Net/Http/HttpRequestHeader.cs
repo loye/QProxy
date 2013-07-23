@@ -8,11 +8,23 @@ namespace Q.Net
     {
         private static readonly Regex REGEX_URL = new Regex(@"^(?:(?<schema>http|https|(?<schemaNotSupported>\w+))\://)?(?<host>[^/: ]+)?(?:\:(?<port>\d+))?\S*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+        private string m_host;
+
         public string HttpMethod { get; private set; }
 
         public string Url { get; private set; }
 
-        public string Host { get; private set; }
+        public string Host
+        {
+            get
+            {
+                return String.IsNullOrEmpty(m_host) ? (string)this[HttpHeaderKey.Host] : m_host;
+            }
+            private set
+            {
+                m_host = value;
+            }
+        }
 
         public int Port { get; private set; }
 
@@ -24,12 +36,12 @@ namespace Q.Net
             }
         }
 
-        public HttpRequestHeader(string httpMethod, string host, int port, string version = "HTTP/1.1") :
+        public HttpRequestHeader(string httpMethod, string host, int port, string version = HttpVersion.Default) :
             this(httpMethod, host + ":" + port, host, port, version)
         {
         }
 
-        public HttpRequestHeader(string httpMethod, string url, string host, int port, string version = "HTTP/1.1")
+        public HttpRequestHeader(string httpMethod, string url, string host, int port, string version = HttpVersion.Default)
         {
             this.HttpMethod = httpMethod;
             this.Url = url;

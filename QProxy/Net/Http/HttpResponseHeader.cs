@@ -16,7 +16,7 @@ namespace Q.Net
             }
         }
 
-        public HttpResponseHeader(int statusCode, string status, string version = "HTTP/1.1")
+        public HttpResponseHeader(int statusCode, string status, string version = HttpVersion.Default)
         {
             this.StatusCode = statusCode;
             this.Status = status;

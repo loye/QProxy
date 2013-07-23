@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -51,7 +52,7 @@ namespace Q.Net
             }
             set
             {
-                if (key != null)
+                if (!String.IsNullOrEmpty(key))
                 {
                     if (value == null)
                     {

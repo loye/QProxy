@@ -26,6 +26,11 @@ namespace Q.Net
         public const string Connection_Established = "Connection Established";
     }
 
+    public sealed class HttpVersion
+    {
+        public const string Default = "HTTP/1.1";
+    }
+
     public sealed class HttpHeaderCustomKey
     {
         private const string CustomPrefix = "Q-";
