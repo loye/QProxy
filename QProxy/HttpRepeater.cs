@@ -21,10 +21,40 @@ namespace Q.Proxy
 
         public override void Relay(Stream localStream)
         {
-            Transmit(localStream, null);
+            //Transmit(localStream, null);
+            Stream remoteStream = null;
+            byte[] buffer = new byte[4096];
+
+            using (MemoryStream mem = new MemoryStream())
+            {
+                HttpHeader header = null;
+                for (int len = localStream.Read(buffer, 0, buffer.Length); len > 0; len = localStream.Read(buffer, 0, buffer.Length))
+                {
+                    if (remoteStream == null)
+                    {
+                        mem.Write(buffer, 0, len);
+                        if (HttpHeader.TryParse(mem.GetBuffer(), 0, (int)mem.Length, out header))
+                        {
+                            var requestHeader = header as Q.Net.HttpRequestHeader;
+                            remoteStream = this.Connect(ref localStream, requestHeader);
+
+
+                        }
+                    }
+                    else
+                    {
+                        remoteStream.Write(buffer, 0, len);
+                    }
+                }
+            }
         }
 
         #region Private Methods
+
+
+
+
+
 
         private void Transmit(Stream fromStream, Stream toStream)
         {
@@ -102,9 +132,7 @@ namespace Q.Proxy
 
         private void DirectRelay(Stream localStream, Stream remoteStream)
         {
-            Task.WaitAll(
-                localStream.CopyToAsync(remoteStream, HttpPackage.BUFFER_LENGTH),
-                remoteStream.CopyToAsync(localStream, HttpPackage.BUFFER_LENGTH));
+            Task.WaitAll(localStream.CopyToAsync(remoteStream), remoteStream.CopyToAsync(localStream));
         }
 
         private Stream Connect(ref Stream localStream, Q.Net.HttpRequestHeader requestHeader)
@@ -126,4 +154,5 @@ namespace Q.Proxy
 
         #endregion
     }
+
 }

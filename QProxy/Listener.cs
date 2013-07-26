@@ -36,7 +36,7 @@ namespace Q.Proxy
         {
             this.Proxy = proxy;
             m_tcpListener = new TcpListener(endPoint);
-            m_repeater = new HttpRepeater(proxy, decryptSSL);
+            m_repeater = new SocksRepeater((IPEndPoint)(m_tcpListener.LocalEndpoint)); //new HttpRepeater(proxy, decryptSSL);
         }
 
         #endregion

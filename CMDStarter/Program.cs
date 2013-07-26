@@ -21,7 +21,20 @@ namespace CMDStarter
             //DateTime time2 = DateTime.Now;
             //Console.WriteLine(time2 - time1);
 
-            new Listener("127.0.0.1", 1000, true).Start();
+            new Listener("127.0.0.1", 2000, false).Start();
+
+
+            
+            
+
+
+
+
+
+
+
+
+
 
             Console.WriteLine("Started");
             while (true)
