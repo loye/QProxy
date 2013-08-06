@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Q.Net;
 using Q.Proxy.Net;
+using Q.Proxy.Net.Http;
 
 namespace Q.Proxy
 {
@@ -71,12 +72,18 @@ namespace Q.Proxy
         {
             Stream remoteStream = null;
 
+            /*
             IPEndPoint endPoint = new IPEndPoint(connectRequest.AddressType == 1 ? connectRequest.IPAddress : DnsHelper.GetHostAddress(connectRequest.Host), connectRequest.Port);
             Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             socket.Connect(endPoint);
             remoteStream = new NetworkStream(socket, true);
+            */
 
-
+            remoteStream = new HttpTunnelStream(
+                "http://localhost:1008/gate",
+                connectRequest.AddressType == 1 ? connectRequest.IPAddress.ToString() : connectRequest.Host,
+                connectRequest.Port
+                , null);//new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8888));
 
 
 

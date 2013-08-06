@@ -5,7 +5,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QProxy", "QProxy\QProxy.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMDStarter", "CMDStarter\CMDStarter.csproj", "{3A1FBDCE-14C9-4E94-B64B-BF324A70534F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpStreamHandler", "HttpStreamHandler\HttpStreamHandler.csproj", "{96FF5D2C-EA60-4853-A00D-3A9FDC7D3F75}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpTunnelHandler", "HttpTunnelHandler\HttpTunnelHandler.csproj", "{DBAFB1E4-54BE-4A1C-B181-5EDBB1F4B176}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,10 +21,10 @@ Global
 		{3A1FBDCE-14C9-4E94-B64B-BF324A70534F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3A1FBDCE-14C9-4E94-B64B-BF324A70534F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3A1FBDCE-14C9-4E94-B64B-BF324A70534F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{96FF5D2C-EA60-4853-A00D-3A9FDC7D3F75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{96FF5D2C-EA60-4853-A00D-3A9FDC7D3F75}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{96FF5D2C-EA60-4853-A00D-3A9FDC7D3F75}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{96FF5D2C-EA60-4853-A00D-3A9FDC7D3F75}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBAFB1E4-54BE-4A1C-B181-5EDBB1F4B176}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBAFB1E4-54BE-4A1C-B181-5EDBB1F4B176}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBAFB1E4-54BE-4A1C-B181-5EDBB1F4B176}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBAFB1E4-54BE-4A1C-B181-5EDBB1F4B176}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

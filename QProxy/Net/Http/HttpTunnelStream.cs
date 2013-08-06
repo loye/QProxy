@@ -26,24 +26,13 @@ namespace Q.Proxy.Net.Http
 
         public Stream InnerStream { get; private set; }
 
-        public HttpTunnelStream(Uri handlerUri, string destHost, int destPort, IPEndPoint proxy = null)
+        public HttpTunnelStream(string handler, string destHost, int destPort, IPEndPoint proxy = null)
         {
-            IPEndPoint endPoint = proxy != null ? proxy : new IPEndPoint(DnsHelper.GetHostAddress(handlerUri.Host), handlerUri.Port);
+            HttpWebRequest httpWebRequest = HttpWebRequest.CreateHttp(handler);
+            httpWebRequest.Headers[HttpHeaderCustomKey.Host] = destHost;
+            httpWebRequest.Headers[HttpHeaderCustomKey.Port] = destPort.ToString();
+            httpWebRequest.Method = HttpMethod.POST;
 
-            this.HandlerUri = handlerUri;
-            this.DestHost = destHost;
-            this.DestPort = destPort;
-
-            Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            socket.Connect(endPoint);
-            Stream stream = new NetworkStream(socket, true);
-            if (handlerUri.Scheme == Uri.UriSchemeHttps)
-            {
-                var task = HttpsConnector.Instance.ConnectAsClientAsync(stream, handlerUri.Host, handlerUri.Port, proxy, true);
-                task.Wait();
-                stream = task.Result;
-            }
-            this.InnerStream = stream;
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -98,17 +87,6 @@ namespace Q.Proxy.Net.Http
             this.InnerStream.Write(buffer, offset, count);
         }
 
-        public override void Flush()
-        {
-            this.InnerStream.Flush();
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            this.InnerStream.Dispose();
-            base.Dispose(disposing);
-        }
-
         private Q.Net.HttpRequestHeader NewRequestHeader()
         {
             var httpHeader = new Q.Net.HttpRequestHeader(HttpMethod.POST, this.HandlerUri.ToString(), this.HandlerUri.Host, this.HandlerUri.Port);
@@ -118,48 +96,59 @@ namespace Q.Proxy.Net.Http
             return httpHeader;
         }
 
-        #region Not Supported Methods
+        #region Call InnerStream Methods
 
         public override bool CanRead
         {
-            get { throw new NotImplementedException(); }
+            get { return this.InnerStream.CanRead; }
         }
 
         public override bool CanSeek
         {
-            get { throw new NotImplementedException(); }
+            get { return this.InnerStream.CanSeek; }
         }
 
         public override bool CanWrite
         {
-            get { throw new NotImplementedException(); }
+            get { return this.InnerStream.CanWrite; }
         }
 
         public override long Length
         {
-            get { throw new NotImplementedException(); }
+            get { return this.InnerStream.Length; }
         }
 
         public override long Position
         {
             get
             {
-                throw new NotImplementedException();
+                return this.InnerStream.Position;
             }
             set
             {
-                throw new NotImplementedException();
+                this.InnerStream.Position = value;
             }
         }
 
         public override long Seek(long offset, SeekOrigin origin)
         {
-            throw new NotImplementedException();
+            return this.InnerStream.Seek(offset, origin);
         }
 
         public override void SetLength(long value)
         {
-            throw new NotImplementedException();
+            this.InnerStream.SetLength(value);
+        }
+
+        public override void Flush()
+        {
+            this.InnerStream.Flush();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            this.InnerStream.Dispose();
+            base.Dispose(disposing);
         }
 
         #endregion

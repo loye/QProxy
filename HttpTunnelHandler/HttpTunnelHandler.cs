@@ -1,12 +1,14 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 using System.Web;
 
 namespace Q.Net.Web
 {
-    public class HttpStreamHandler : IHttpHandler
+    public class HttpTunnelHandler : IHttpHandler
     {
         #region IHttpHandler Members
 
@@ -30,20 +32,28 @@ namespace Q.Net.Web
             }
         }
 
+        #endregion
+
         private void GET(HttpContext context)
         {
             var request = context.Request;
             var response = context.Response;
-            response.Headers["Connection"] = "close";
             response.Write("It's working!");
             response.End();
         }
 
         private void POST(HttpContext context)
         {
+            int len = 0;
+            len++;
+
+
             var request = context.Request;
             var response = context.Response;
+            response.Write("xxx");
+            response.Flush();
 
+            /*
             string host = request.Headers["Q-Host"];
             int port = int.Parse(request.Headers["Q-Port"]);
             IPAddress ip = Dns.GetHostAddresses(host).Where(a => a.AddressFamily == AddressFamily.InterNetwork).First();
@@ -51,26 +61,32 @@ namespace Q.Net.Web
             Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             socket.Connect(endPoint);
 
-            response.Headers["Connection"] = "close";
-
             using (NetworkStream remoteStream = new NetworkStream(socket, true))
             using (Stream inputStream = request.InputStream)
             using (Stream outputStream = response.OutputStream)
             {
-                byte[] buffer = new byte[4096];
-                for (int len = inputStream.Read(buffer, 0, buffer.Length); len > 0; len = inputStream.Read(buffer, 0, buffer.Length))
-                {
-                    remoteStream.Write(buffer, 0, len);
-                }
-                for (int len = remoteStream.Read(buffer, 0, buffer.Length); len > 0; len = remoteStream.Read(buffer, 0, buffer.Length))
-                {
-                    outputStream.Write(buffer, 0, len);
-                    outputStream.Flush();
-                }
+                Task t1 = Task.Run(() => { Transfer(inputStream, remoteStream); });
+                Task t2 = Task.Run(() => { Transfer(remoteStream, outputStream, response.Flush); });
+                Task.WaitAll(t1, t2);
             }
+             * */
+            //using (Stream inputStream = request.InputStream)
+            //using (Stream outputStream = response.OutputStream)
+            //{
+            //    Transfer(inputStream, outputStream, response.Flush);
+            //}
+
             response.End();
         }
 
-        #endregion
+        private void Transfer(Stream src, Stream dest, Action action = null)
+        {
+            byte[] buffer = new byte[4096];
+            for (int len = src.Read(buffer, 0, buffer.Length); len > 0; len = src.Read(buffer, 0, buffer.Length))
+            {
+                dest.Write(buffer, 0, len);
+                if (action != null) action();
+            }
+        }
     }
 }
