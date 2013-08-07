@@ -52,7 +52,7 @@ namespace Q.Net
         private Net.HttpRequestHeader NewRequestHeader()
         {
             var httpHeader = new Net.HttpRequestHeader(HttpMethod.POST, this.HandlerUri.ToString(), this.HandlerUri.Host, this.HandlerUri.Port);
-            httpHeader[HttpHeaderCustomKey.Id] = this.Id.ToString();
+            //httpHeader[HttpHeaderCustomKey.Id] = this.Id.ToString();
             httpHeader[HttpHeaderCustomKey.Host] = this.Host;
             httpHeader[HttpHeaderCustomKey.Port] = this.Port;
             return httpHeader;

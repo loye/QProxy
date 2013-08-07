@@ -35,7 +35,7 @@ namespace Q.Net
     {
         private const string CustomPrefix = "Q-";
 
-        public const string Id = CustomPrefix + "Id";
+        public const string Type = CustomPrefix + "Type";
         public const string Host = CustomPrefix + "Host";
         public const string Port = CustomPrefix + "Port";
         public const string IP = CustomPrefix + "IP";

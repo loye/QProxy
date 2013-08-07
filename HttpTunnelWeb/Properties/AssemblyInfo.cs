@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("HttpTunnelHandler")]
+[assembly: AssemblyTitle("HttpTunnelWeb")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("MicroStrategy, Inc.")]
-[assembly: AssemblyProduct("HttpTunnelHandler")]
+[assembly: AssemblyProduct("HttpTunnelWeb")]
 [assembly: AssemblyCopyright("Copyright © MicroStrategy, Inc. 2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("a7716acd-9229-4801-ba64-449ea9bd4aab")]
+[assembly: Guid("a2580d3e-4a97-4593-bc3a-c55c9e415d74")]
 
 // Version information for an assembly consists of the following four values:
 //

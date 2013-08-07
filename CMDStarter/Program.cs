@@ -49,20 +49,23 @@ namespace CMDStarter
         private static void TestHttpTunnelStream()
         {
             //            var s = new HttpTunnelStream(new Uri("http://localhost:1008/gate"), "www.baidu.com", 80, new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8888));
-            string source = @"GET http://www.baidu.com HTTP/1.1
+            string source = @"GET http://www.baidu.com/ HTTP/1.1
 Host: www.baidu.com
+Connection: close
 
 ";
             var bin = ASCIIEncoding.ASCII.GetBytes(source);
+            //Console.WriteLine(bin.Length);
+
             var endPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 1008);
             Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             socket.Connect(endPoint);
             Stream stream = new NetworkStream(socket, true);
 
-            var httpHeader = new Q.Net.HttpRequestHeader(HttpMethod.POST, "http://localhost:1008/gate", "localhost", 1008);
+            var httpHeader = new Q.Net.HttpRequestHeader(HttpMethod.POST, "http://localhost:1008/", "localhost", 1008);
             httpHeader[HttpHeaderCustomKey.Host] = "www.baidu.com";
             httpHeader[HttpHeaderCustomKey.Port] = 80;
-            //httpHeader["Content-Length"] = bin.Length.ToString();
+            httpHeader[HttpHeaderCustomKey.Type] = "HttpTunnel";
             httpHeader[HttpHeaderKey.Transfer_Encoding] = "chunked";
 
 
@@ -70,17 +73,12 @@ Host: www.baidu.com
             {
                 stream.Write(httpHeader.ToBinary(), 0, httpHeader.Length);
 
-                //System.Threading.Thread.Sleep(3000);
-                stream.Write(ASCIIEncoding.ASCII.GetBytes("3a\r\n"), 0, 4);
+                stream.Write(ASCIIEncoding.ASCII.GetBytes("4E\r\n"), 0, 4);
                 stream.Write(bin, 0, bin.Length);
                 stream.Write(ASCIIEncoding.ASCII.GetBytes("\r\n"), 0, 2);
-
-                stream.Write(ASCIIEncoding.ASCII.GetBytes("3a\r\n"), 0, 4);
-                stream.Write(bin, 0, bin.Length);
-                stream.Write(ASCIIEncoding.ASCII.GetBytes("\r\n"), 0, 2);
-
-                System.Threading.Thread.Sleep(10000);
+                System.Threading.Thread.Sleep(30000);
                 stream.Write(ASCIIEncoding.ASCII.GetBytes("0\r\n\r\n"), 0, 5);
+
             });
             Task t2 = Task.Run(() =>
             {
@@ -93,44 +91,6 @@ Host: www.baidu.com
                 }
             });
             Task.WaitAll(t1, t2);
-
-            /*
-            var r = HttpWebRequest.CreateHttp("http://localhost:1008/gate");
-            r.Method = "POST";
-            //r.Proxy = new WebProxy("http://127.0.0.1:8888");
-            r.Headers[HttpHeaderCustomKey.Host] = "www.baidu.com";
-            r.Headers[HttpHeaderCustomKey.Port] = "80";
-            r.SendChunked = true;
-            r.KeepAlive = true;
-            using (Stream rs = r.GetRequestStream())
-            {
-                    rs.Write(bin, 0, bin.Length);
-                using (Stream ps = r.GetResponse().GetResponseStream())
-                {
-                    Task t1 = Task.Run(() =>
-                    {
-                        rs.Write(bin, 0, bin.Length);
-                        System.Threading.Thread.Sleep(3000);
-                        rs.Write(bin, 0, bin.Length);
-                    });
-                    Task t2 = Task.Run(() =>
-                    {
-                        byte[] buffer = new byte[4096];
-                        var len = ps.Read(buffer, 0, 4096);
-                        while (len > 0)
-                        {
-                            Console.WriteLine(ASCIIEncoding.ASCII.GetString(buffer, 0, len));
-                            len = ps.Read(buffer, 0, 4096);
-                        }
-                    });
-                    Task.WaitAll(t1, t2);
-                }
-            }
-            */
-
-
-
-
         }
 
         private static void Test1()
