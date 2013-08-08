@@ -26,43 +26,40 @@ namespace Q.Net.Web
         public void Application_BeginRequest(Object source, EventArgs e)
         {
             IServiceProvider provider = (IServiceProvider)HttpContext.Current;
-            HttpWorkerRequest workerRequest = (HttpWorkerRequest)provider.GetService(typeof(HttpWorkerRequest));
+            HttpWorkerRequest wr = (HttpWorkerRequest)provider.GetService(typeof(HttpWorkerRequest));
 
-            if (workerRequest.GetHttpVerbName() == "POST" && workerRequest.GetUnknownRequestHeader("Q-Type") == "HttpTunnel")
+            if (wr.GetHttpVerbName() == "POST" && wr.GetUnknownRequestHeader("Q-Type") == "HttpTunnel")
             {
-                if (!workerRequest.IsEntireEntityBodyIsPreloaded())
+                if (!wr.IsEntireEntityBodyIsPreloaded())
                 {
                     var response = HttpContext.Current.Response;
-                    workerRequest.SendKnownResponseHeader(HttpWorkerRequest.HeaderConnection, "close");
-                    workerRequest.SendUnknownResponseHeader("Q-Success", "true");
+                    wr.SendKnownResponseHeader(HttpWorkerRequest.HeaderConnection, "close");
+                    wr.SendUnknownResponseHeader("Q-Success", "true");
 
-                    using (Stream remoteStream = CreateRemoteStream(workerRequest))
+                    using (Stream remoteStream = CreateRemoteStream(wr))
                     using (Stream responseStream = response.OutputStream)
                     {
                         Task.WaitAny(
                             Task.Run(() =>
                             {
-                                Transfer(workerRequest.ReadEntityBody, remoteStream.Write);
+                                byte[] buffer = new byte[4096];
+                                for (int len = wr.ReadEntityBody(buffer, 0, buffer.Length); len > 0; len = wr.ReadEntityBody(buffer, 0, buffer.Length))
+                                {
+                                    remoteStream.Write(buffer, 0, len);
+                                }
                             }),
                             Task.Run(() =>
                             {
-                                Transfer(remoteStream.Read, responseStream.Write, response.Flush);
+                                byte[] buffer = new byte[4096];
+                                for (int len = remoteStream.Read(buffer, 0, buffer.Length); len > 0 && wr.IsClientConnected(); len = remoteStream.Read(buffer, 0, buffer.Length))
+                                {
+                                    responseStream.Write(buffer, 0, len);
+                                    response.Flush();
+                                }
                             }));
                     }
-                    response.End();
-                }
-            }
-        }
 
-        private void Transfer(Func<byte[], int, int, int> read, Action<byte[], int, int> write, Action flush = null)
-        {
-            byte[] buffer = new byte[4096];
-            for (int len = read(buffer, 0, buffer.Length); len > 0; len = read(buffer, 0, buffer.Length))
-            {
-                write(buffer, 0, len);
-                if (flush != null)
-                {
-                    flush();
+                    response.End();
                 }
             }
         }

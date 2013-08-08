@@ -52,6 +52,7 @@
     <Compile Include="Net\Http\HttpResponseHeader.cs" />
     <Compile Include="Net\Http\HttpsConnector.cs" />
     <Compile Include="Listener.cs" />
+    <Compile Include="Q\Extenstions.cs" />
     <Compile Include="Q\Logger.cs" />
     <Compile Include="Repeater.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

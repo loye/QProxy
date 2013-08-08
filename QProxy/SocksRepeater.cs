@@ -24,12 +24,25 @@ namespace Q.Proxy
 
         public override void Relay(Stream localStream)
         {
-            byte[] buffer = new byte[4096];
             using (Stream remoteStream = Connect(localStream))
             {
                 if (remoteStream != null)
                 {
-                    Task.WaitAny(localStream.CopyToAsync(remoteStream), remoteStream.CopyToAsync(localStream));
+                    Task.WaitAny(Task.Run(() =>
+                    {
+                        byte[] buffer = new byte[4096];
+                        for (int len = localStream.Read(buffer, 0, buffer.Length); len > 0; len = localStream.Read(buffer, 0, buffer.Length))
+                        {
+                            remoteStream.Write(buffer, 0, len);
+                        }
+                    }), Task.Run(() =>
+                    {
+                        byte[] buffer = new byte[4096];
+                        for (int len = remoteStream.Read(buffer, 0, buffer.Length); len > 0; len = remoteStream.Read(buffer, 0, buffer.Length))
+                        {
+                            localStream.Write(buffer, 0, len);
+                        }
+                    }));
                 }
             }
         }
@@ -72,19 +85,19 @@ namespace Q.Proxy
         {
             Stream remoteStream = null;
 
-            /*
+           
             IPEndPoint endPoint = new IPEndPoint(connectRequest.AddressType == 1 ? connectRequest.IPAddress : DnsHelper.GetHostAddress(connectRequest.Host), connectRequest.Port);
             Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             socket.Connect(endPoint);
             remoteStream = new NetworkStream(socket, true);
-            */
+/*           
 
             remoteStream = new HttpTunnelStream(
-                "http://localhost:1008/gate",
+                "http://localhost:1008/",
                 connectRequest.AddressType == 1 ? connectRequest.IPAddress.ToString() : connectRequest.Host,
                 connectRequest.Port
                 , null);//new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8888));
-
+*/  
 
 
             return remoteStream;

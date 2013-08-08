@@ -12,8 +12,6 @@ namespace Q.Proxy.Net.Http
 {
     public class HttpTunnelStream : Stream
     {
-        private bool m_isHeaderSent;
-
         private bool m_isHeaderRecieved;
 
         private MemoryStream m_recieveHeaderBuffer;
@@ -28,11 +26,19 @@ namespace Q.Proxy.Net.Http
 
         public HttpTunnelStream(string handler, string destHost, int destPort, IPEndPoint proxy = null)
         {
-            HttpWebRequest httpWebRequest = HttpWebRequest.CreateHttp(handler);
-            httpWebRequest.Headers[HttpHeaderCustomKey.Host] = destHost;
-            httpWebRequest.Headers[HttpHeaderCustomKey.Port] = destPort.ToString();
-            httpWebRequest.Method = HttpMethod.POST;
+            this.HandlerUri = new Uri(handler);
+            this.DestHost = destHost;
+            this.DestPort = destPort;
 
+            IPEndPoint endPoint = proxy != null ? proxy : new IPEndPoint(DnsHelper.GetHostAddress(this.HandlerUri.Host), this.HandlerUri.Port);
+            Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            socket.Connect(endPoint);
+            Stream stream = new NetworkStream(socket, true);
+
+            var httpHeader = this.NewRequestHeader();
+            stream.Write(httpHeader.ToBinary(), 0, httpHeader.Length);
+
+            this.InnerStream = stream;
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -48,6 +54,7 @@ namespace Q.Proxy.Net.Http
                     mem.Write(buf, 0, len);
                     if (HttpHeader.TryParse(mem.GetBuffer(), 0, (int)mem.Length, out header))
                     {
+                        Console.WriteLine(header);
                         mem.Position = header.Length;
                         m_isHeaderRecieved = true;
                         m_recieveHeaderBuffer = mem;
@@ -70,29 +77,25 @@ namespace Q.Proxy.Net.Http
             {
                 lenght += this.InnerStream.Read(buffer, offset, count);
             }
-
             return lenght;
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            if (!m_isHeaderSent)
+            if (buffer != null && buffer.Length > 0)
             {
-                var httpHeader = this.NewRequestHeader();
-                byte[] bin = httpHeader.ToBinary();
-                this.InnerStream.Write(bin, 0, bin.Length);
-                m_isHeaderSent = true;
+                byte[] chunked = buffer.ToChunked(offset, count);
+                this.InnerStream.Write(chunked, 0, chunked.Length);
             }
-
-            this.InnerStream.Write(buffer, offset, count);
         }
 
         private Q.Net.HttpRequestHeader NewRequestHeader()
         {
             var httpHeader = new Q.Net.HttpRequestHeader(HttpMethod.POST, this.HandlerUri.ToString(), this.HandlerUri.Host, this.HandlerUri.Port);
-            httpHeader[HttpHeaderKey.Connection] = "closed";
+            httpHeader[HttpHeaderCustomKey.Type] = "HttpTunnel";
             httpHeader[HttpHeaderCustomKey.Host] = this.DestHost;
             httpHeader[HttpHeaderCustomKey.Port] = this.DestPort;
+            httpHeader[HttpHeaderKey.Transfer_Encoding] = "chunked";
             return httpHeader;
         }
 
@@ -147,6 +150,8 @@ namespace Q.Proxy.Net.Http
 
         protected override void Dispose(bool disposing)
         {
+            this.InnerStream.Write(new byte[0].ToChunked(), 0, 3);
+            this.InnerStream.Flush();
             this.InnerStream.Dispose();
             base.Dispose(disposing);
         }
