@@ -27,28 +27,20 @@ namespace Q.Net.Web
         {
             IServiceProvider provider = (IServiceProvider)HttpContext.Current;
             HttpWorkerRequest wr = (HttpWorkerRequest)provider.GetService(typeof(HttpWorkerRequest));
+            var response = HttpContext.Current.Response;
 
             if (wr.GetHttpVerbName() == "POST" && wr.GetUnknownRequestHeader("Q-Type") == "HttpTunnel")
             {
                 if (!wr.IsEntireEntityBodyIsPreloaded())
                 {
-                    var response = HttpContext.Current.Response;
                     wr.SendKnownResponseHeader(HttpWorkerRequest.HeaderConnection, "close");
-                    wr.SendUnknownResponseHeader("Q-Success", "true");
 
-                    using (Stream remoteStream = CreateRemoteStream(wr))
-                    using (Stream responseStream = response.OutputStream)
+                    try
                     {
-                        Task.WaitAny(
-                            Task.Run(() =>
-                            {
-                                byte[] buffer = new byte[4096];
-                                for (int len = wr.ReadEntityBody(buffer, 0, buffer.Length); len > 0; len = wr.ReadEntityBody(buffer, 0, buffer.Length))
-                                {
-                                    remoteStream.Write(buffer, 0, len);
-                                }
-                            }),
-                            Task.Run(() =>
+                        using (Stream remoteStream = CreateRemoteStream(wr))
+                        using (Stream responseStream = response.OutputStream)
+                        {
+                            var remoteTask = Task.Run(() =>
                             {
                                 byte[] buffer = new byte[4096];
                                 for (int len = remoteStream.Read(buffer, 0, buffer.Length); len > 0 && wr.IsClientConnected(); len = remoteStream.Read(buffer, 0, buffer.Length))
@@ -56,10 +48,24 @@ namespace Q.Net.Web
                                     responseStream.Write(buffer, 0, len);
                                     response.Flush();
                                 }
-                            }));
+                            });
+                            var localTask = Task.Run(() =>
+                            {
+                                byte[] buffer = new byte[4096];
+                                for (int len = wr.ReadEntityBody(buffer, 0, buffer.Length); len > 0; len = wr.ReadEntityBody(buffer, 0, buffer.Length))
+                                {
+                                    remoteStream.Write(buffer, 0, len);
+                                }
+                                Task.WaitAll(remoteTask);
+                            });
+                            Task.WaitAny(localTask, remoteTask);
+                        }
                     }
-
+                    catch (Exception)
+                    {
+                    }
                     response.End();
+                    wr.CloseConnection();
                 }
             }
         }

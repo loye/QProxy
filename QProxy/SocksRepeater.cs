@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Q.Net;
 using Q.Proxy.Net;
@@ -28,21 +29,24 @@ namespace Q.Proxy
             {
                 if (remoteStream != null)
                 {
-                    Task.WaitAny(Task.Run(() =>
-                    {
-                        byte[] buffer = new byte[4096];
-                        for (int len = localStream.Read(buffer, 0, buffer.Length); len > 0; len = localStream.Read(buffer, 0, buffer.Length))
-                        {
-                            remoteStream.Write(buffer, 0, len);
-                        }
-                    }), Task.Run(() =>
+                    var remoteTask = Task.Run(() =>
                     {
                         byte[] buffer = new byte[4096];
                         for (int len = remoteStream.Read(buffer, 0, buffer.Length); len > 0; len = remoteStream.Read(buffer, 0, buffer.Length))
                         {
                             localStream.Write(buffer, 0, len);
                         }
-                    }));
+                    });
+                    var localTask = Task.Run(() =>
+                    {
+                        byte[] buffer = new byte[4096];
+                        for (int len = localStream.Read(buffer, 0, buffer.Length); len > 0; len = localStream.Read(buffer, 0, buffer.Length))
+                        {
+                            remoteStream.Write(buffer, 0, len);
+                        }
+                        Task.WaitAll(remoteTask);
+                    });
+                    Task.WaitAny(localTask, remoteTask);
                 }
             }
         }
@@ -85,20 +89,18 @@ namespace Q.Proxy
         {
             Stream remoteStream = null;
 
-           
+            /*           
             IPEndPoint endPoint = new IPEndPoint(connectRequest.AddressType == 1 ? connectRequest.IPAddress : DnsHelper.GetHostAddress(connectRequest.Host), connectRequest.Port);
             Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             socket.Connect(endPoint);
             remoteStream = new NetworkStream(socket, true);
-/*           
+            */
 
             remoteStream = new HttpTunnelStream(
                 "http://localhost:1008/",
                 connectRequest.AddressType == 1 ? connectRequest.IPAddress.ToString() : connectRequest.Host,
                 connectRequest.Port
                 , null);//new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8888));
-*/  
-
 
             return remoteStream;
         }

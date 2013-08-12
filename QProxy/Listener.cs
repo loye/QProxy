@@ -73,18 +73,19 @@ namespace Q.Proxy
         {
             listener.AcceptTcpClientAsync().ContinueWith(async (clientAsync) =>
             {
-                Accept(listener);
-
                 using (TcpClient client = await clientAsync)
-                using (NetworkStream networkStream = client.GetStream())
                 {
-                    try
+                    Accept(listener);
+                    using (NetworkStream networkStream = client.GetStream())
                     {
-                        m_repeater.Relay(networkStream);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.PublishException(ex);
+                        try
+                        {
+                            m_repeater.Relay(networkStream);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.PublishException(ex);
+                        }
                     }
                 }
             });

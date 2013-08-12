@@ -39,6 +39,8 @@ namespace Q.Proxy.Net.Http
             stream.Write(httpHeader.ToBinary(), 0, httpHeader.Length);
 
             this.InnerStream = stream;
+
+            Logger.Info(httpHeader.ToString());
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -54,12 +56,15 @@ namespace Q.Proxy.Net.Http
                     mem.Write(buf, 0, len);
                     if (HttpHeader.TryParse(mem.GetBuffer(), 0, (int)mem.Length, out header))
                     {
-                        Console.WriteLine(header);
                         mem.Position = header.Length;
                         m_isHeaderRecieved = true;
                         m_recieveHeaderBuffer = mem;
                         break;
                     }
+                }
+                if (!m_isHeaderRecieved)
+                {
+                    return lenght;
                 }
             }
 
@@ -70,13 +75,13 @@ namespace Q.Proxy.Net.Http
                 if (len1 < count)
                 {
                     m_recieveHeaderBuffer = null;
-                    lenght += this.InnerStream.Read(buffer, offset + len1, count - len1);
                 }
             }
             else
             {
                 lenght += this.InnerStream.Read(buffer, offset, count);
             }
+
             return lenght;
         }
 

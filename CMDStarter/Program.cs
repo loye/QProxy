@@ -38,7 +38,6 @@ namespace CMDStarter
 
 
 
-            Console.WriteLine("Started");
             while (true)
             {
                 //TestHttpStream();
