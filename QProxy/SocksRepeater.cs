@@ -97,7 +97,7 @@ namespace Q.Proxy
             */
 
             remoteStream = new HttpTunnelStream(
-                "http://localhost:1008/",
+                "https://chn-lqiu.corp.microstrategy.com:1009/",
                 connectRequest.AddressType == 1 ? connectRequest.IPAddress.ToString() : connectRequest.Host,
                 connectRequest.Port
                 , null);//new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8888));

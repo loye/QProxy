@@ -43,5 +43,11 @@ namespace Q
             result[result.Length - 1] = 10;
             return result;
         }
+
+        public static T WaitResult<T>(this Task<T> task)
+        {
+            task.Wait();
+            return task.Result;
+        }
     }
 }

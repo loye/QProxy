@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -34,6 +35,11 @@ namespace Q.Proxy.Net.Http
             Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             socket.Connect(endPoint);
             Stream stream = new NetworkStream(socket, true);
+
+            if (this.HandlerUri.Scheme == Uri.UriSchemeHttps)
+            {
+                stream = HttpsConnector.Instance.ConnectAsClientAsync(stream, this.HandlerUri.Host, this.HandlerUri.Port, proxy, true).WaitResult();
+            }
 
             var httpHeader = this.NewRequestHeader();
             stream.Write(httpHeader.ToBinary(), 0, httpHeader.Length);
