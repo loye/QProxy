@@ -29,43 +29,51 @@ namespace Q.Net.Web
             HttpWorkerRequest wr = (HttpWorkerRequest)provider.GetService(typeof(HttpWorkerRequest));
             var response = HttpContext.Current.Response;
 
-            if (wr.GetHttpVerbName() == "POST" && wr.GetUnknownRequestHeader("Q-Type") == "HttpTunnel")
+            if (String.Compare(wr.GetRawUrl(), "/tunnel", true) == 0)
             {
-                if (!wr.IsEntireEntityBodyIsPreloaded())
+                if (wr.GetHttpVerbName() == "POST")
                 {
-                    wr.SendKnownResponseHeader(HttpWorkerRequest.HeaderConnection, "close");
+                    if (!wr.IsEntireEntityBodyIsPreloaded())
+                    {
+                        wr.SendKnownResponseHeader(HttpWorkerRequest.HeaderConnection, "close");
 
-                    try
-                    {
-                        using (Stream remoteStream = CreateRemoteStream(wr))
-                        using (Stream responseStream = response.OutputStream)
+                        try
                         {
-                            var remoteTask = Task.Run(() =>
+                            using (Stream remoteStream = CreateRemoteStream(wr))
+                            using (Stream responseStream = response.OutputStream)
                             {
-                                byte[] buffer = new byte[4096];
-                                for (int len = remoteStream.Read(buffer, 0, buffer.Length); len > 0 && wr.IsClientConnected(); len = remoteStream.Read(buffer, 0, buffer.Length))
+                                var remoteTask = Task.Run(() =>
                                 {
-                                    responseStream.Write(buffer, 0, len);
-                                    response.Flush();
-                                }
-                            });
-                            var localTask = Task.Run(() =>
-                            {
-                                byte[] buffer = new byte[4096];
-                                for (int len = wr.ReadEntityBody(buffer, 0, buffer.Length); len > 0; len = wr.ReadEntityBody(buffer, 0, buffer.Length))
+                                    byte[] buffer = new byte[4096];
+                                    for (int len = remoteStream.Read(buffer, 0, buffer.Length); len > 0 && wr.IsClientConnected(); len = remoteStream.Read(buffer, 0, buffer.Length))
+                                    {
+                                        responseStream.Write(buffer, 0, len);
+                                        response.Flush();
+                                    }
+                                });
+                                var localTask = Task.Run(() =>
                                 {
-                                    remoteStream.Write(buffer, 0, len);
-                                }
-                                Task.WaitAll(remoteTask);
-                            });
-                            Task.WaitAny(localTask, remoteTask);
+                                    byte[] buffer = new byte[4096];
+                                    for (int len = wr.ReadEntityBody(buffer, 0, buffer.Length); len > 0; len = wr.ReadEntityBody(buffer, 0, buffer.Length))
+                                    {
+                                        remoteStream.Write(buffer, 0, len);
+                                    }
+                                    Task.WaitAll(remoteTask);
+                                });
+                                Task.WaitAny(localTask, remoteTask);
+                            }
                         }
+                        catch (Exception)
+                        {
+                        }
+                        response.End();
+                        wr.CloseConnection();
                     }
-                    catch (Exception)
-                    {
-                    }
+                }
+                else if (wr.GetHttpVerbName() == "GET")
+                {
+                    response.Write("HttpTunnelModule is working!");
                     response.End();
-                    wr.CloseConnection();
                 }
             }
         }

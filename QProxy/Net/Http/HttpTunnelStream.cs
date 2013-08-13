@@ -65,6 +65,7 @@ namespace Q.Proxy.Net.Http
                         mem.Position = header.Length;
                         m_isHeaderRecieved = true;
                         m_recieveHeaderBuffer = mem;
+                        Logger.Info(header.ToString());
                         break;
                     }
                 }
