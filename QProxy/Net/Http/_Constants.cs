@@ -15,6 +15,20 @@ namespace Q.Net
         public const string Proxy_Connection = "Proxy-Connection";
     }
 
+    public sealed class HttpHeaderValue
+    {
+        public sealed class Transfer_Encoding
+        {
+            public const string Chunked = "chunked";
+        }
+
+        public sealed class Connection
+        {
+            public const string Close = "close";
+            public const string Keep_Alive = "keep-alive";
+        }
+    }
+
     public sealed class HttpMethod
     {
         public const string Connect = "CONNECT";
@@ -30,18 +44,4 @@ namespace Q.Net
     {
         public const string Default = "HTTP/1.1";
     }
-
-    public sealed class HttpHeaderCustomKey
-    {
-        private const string CustomPrefix = "Q-";
-
-        public const string Type = CustomPrefix + "Type";
-        public const string Host = CustomPrefix + "Host";
-        public const string Port = CustomPrefix + "Port";
-        public const string IP = CustomPrefix + "IP";
-        public const string SSL = CustomPrefix + "SSL";
-        public const string Encrypted = CustomPrefix + "Encrypted";
-        public const string Exception = CustomPrefix + "Exception";
-    }
-
 }

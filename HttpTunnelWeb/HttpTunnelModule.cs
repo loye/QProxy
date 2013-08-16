@@ -29,7 +29,7 @@ namespace Q.Net.Web
             HttpWorkerRequest wr = (HttpWorkerRequest)provider.GetService(typeof(HttpWorkerRequest));
             var response = HttpContext.Current.Response;
 
-            if (String.Compare(wr.GetRawUrl(), "/tunnel", true) == 0)
+            if (String.Compare(wr.GetRawUrl(), "/a", true) == 0)
             {
                 if (wr.GetHttpVerbName() == "POST")
                 {

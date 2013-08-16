@@ -7,8 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Q.Net;
-using Q.Proxy.Net;
-using Q.Proxy.Net.Http;
+using System.Diagnostics;
 
 namespace Q.Proxy
 {
@@ -29,25 +28,34 @@ namespace Q.Proxy
             {
                 if (remoteStream != null)
                 {
+                    Stopwatch w = new Stopwatch();
+                    w.Start();
+
                     var remoteTask = Task.Run(() =>
                     {
-                        byte[] buffer = new byte[4096];
-                        for (int len = remoteStream.Read(buffer, 0, buffer.Length); len > 0; len = remoteStream.Read(buffer, 0, buffer.Length))
-                        {
-                            localStream.Write(buffer, 0, len);
-                        }
+                        Transfer(remoteStream, localStream);
+                        Console.WriteLine("r");
                     });
                     var localTask = Task.Run(() =>
                     {
-                        byte[] buffer = new byte[4096];
-                        for (int len = localStream.Read(buffer, 0, buffer.Length); len > 0; len = localStream.Read(buffer, 0, buffer.Length))
-                        {
-                            remoteStream.Write(buffer, 0, len);
-                        }
-                        Task.WaitAll(remoteTask);
+                        Transfer(localStream, remoteStream);
+                        Console.WriteLine("l");
                     });
-                    Task.WaitAny(localTask, remoteTask);
+
+                    Task.WaitAny(remoteTask, localTask);
+
+                    Console.WriteLine(w.Elapsed + " Transfer Time");
+                    w.Stop();
                 }
+            }
+        }
+
+        private void Transfer(Stream src, Stream dest)
+        {
+            byte[] buf = new byte[40960];
+            for (int len = src.Read(buf, 0, buf.Length); len > 0; len = src.Read(buf, 0, buf.Length))
+            {
+                dest.Write(buf, 0, len);
             }
         }
 
@@ -71,7 +79,7 @@ namespace Q.Proxy
         private Stream Connect(Stream localStream)
         {
             Stream remoteStream = null;
-            byte[] buffer = new byte[300];
+            byte[] buffer = new byte[128];
             int len = localStream.Read(buffer, 0, buffer.Length);
             InitRequest initRequest = InitRequest.Parse(buffer);
             if (initRequest.Version == 5 && initRequest.Methods.Contains((byte)0))
@@ -79,8 +87,8 @@ namespace Q.Proxy
                 localStream.Write(m_InitResponse, 0, m_InitResponse.Length);
                 len = localStream.Read(buffer, 0, buffer.Length);
                 ConnectRequest connectRequest = ConnectRequest.Parse(buffer);
-                localStream.Write(m_ConnectionResponse, 0, m_ConnectionResponse.Length);
                 remoteStream = GetRemoteStream(connectRequest);
+                localStream.Write(m_ConnectionResponse, 0, m_ConnectionResponse.Length);
             }
             return remoteStream;
         }
@@ -88,20 +96,19 @@ namespace Q.Proxy
         private Stream GetRemoteStream(ConnectRequest connectRequest)
         {
             Stream remoteStream = null;
-
-            /*           
+     /*
             IPEndPoint endPoint = new IPEndPoint(connectRequest.AddressType == 1 ? connectRequest.IPAddress : DnsHelper.GetHostAddress(connectRequest.Host), connectRequest.Port);
             Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             socket.Connect(endPoint);
             remoteStream = new NetworkStream(socket, true);
-            */
-
-            remoteStream = new HttpTunnelStream(
-                "http://tunnel.apphb.com/", //https://tunnel.apphb.com/home
-                connectRequest.AddressType == 1 ? connectRequest.IPAddress.ToString() : connectRequest.Host,
-                connectRequest.Port
-                , null);//new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8888));
-
+*/
+       
+                       remoteStream = new HttpTunnelStream(
+                           "http://localhost:1008/b", //https://tunnel.apphb.com/home
+                           connectRequest.AddressType == 1 ? connectRequest.IPAddress.ToString() : connectRequest.Host,
+                           connectRequest.Port
+                           , null);// new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8888));
+            
             return remoteStream;
         }
 

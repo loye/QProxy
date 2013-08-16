@@ -5,11 +5,11 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Q;
 using Q.Net;
 using Q.Proxy;
-using Q.Proxy.Net.Http;
 
 namespace CMDStarter
 {
@@ -24,7 +24,7 @@ namespace CMDStarter
             //DateTime time2 = DateTime.Now;
             //Console.WriteLine(time2 - time1);
 
-            new Listener("127.0.0.1", 2000, false).Start();
+            new Listener("0.0.0.0", 2000, false).Start();
 
 
             //TestHttpTunnelStream();
@@ -37,11 +37,9 @@ namespace CMDStarter
 
 
 
-
             while (true)
             {
-                //TestHttpStream();
-                var key = Console.ReadKey().Key;
+                Thread.Sleep(int.MaxValue);
             }
         }
 
@@ -94,7 +92,6 @@ Connection: close
             var httpHeader = new Q.Net.HttpRequestHeader(HttpMethod.POST, "http://localhost:1008/", "localhost", 1008);
             httpHeader[HttpHeaderCustomKey.Host] = "www.baidu.com";
             httpHeader[HttpHeaderCustomKey.Port] = 80;
-            httpHeader[HttpHeaderCustomKey.Type] = "HttpTunnel";
             httpHeader[HttpHeaderKey.Transfer_Encoding] = "chunked";
 
 

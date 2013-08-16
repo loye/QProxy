@@ -25,7 +25,7 @@ namespace Q.Net
                         return true;
                     }
                     if (this.HttpHeader.ContentLength == 0
-                         && String.Compare(this.HttpHeader[HttpHeaderKey.Connection], "close", true) == 0)
+                         && String.Compare(this.HttpHeader[HttpHeaderKey.Connection], HttpHeaderValue.Connection.Close, true) == 0)
                     {
                         return false;
                     }
@@ -58,8 +58,7 @@ namespace Q.Net
                 return null;
             }
             HttpPackage package = null;
-            int bufferLength = BUFFER_LENGTH;
-            byte[] buffer = new byte[bufferLength];
+            byte[] buffer = new byte[BUFFER_LENGTH];
             using (MemoryStream mem = new MemoryStream())
             {
                 for (int len = stream.Read(buffer, 0, buffer.Length);
@@ -71,8 +70,8 @@ namespace Q.Net
                     if (ValidatePackage(bin, 0, (int)mem.Length, ref package))
                     {
                         if (package.HttpHeader.ContentLength == 0
-                            && String.Compare(package.HttpHeader[HttpHeaderKey.Connection], "close", true) == 0
-                            && !package.HttpHeader.StartLine.Contains("Connection Established")) // Connection: close
+                            && String.Compare(package.HttpHeader[HttpHeaderKey.Connection], HttpHeaderValue.Connection.Close, true) == 0
+                            && !package.HttpHeader.StartLine.Contains(HttpStatus.Connection_Established)) // Connection: close
                         {
                             continue;
                         }

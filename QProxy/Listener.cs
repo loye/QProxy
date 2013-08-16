@@ -7,12 +7,15 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace Q.Proxy
 {
     public class Listener
     {
-        private TcpListener m_tcpListener;
+        //private TcpListener m_tcpListener;
+
+        private Socket m_ListenSocket;
 
         private Repeater m_repeater;
 
@@ -35,23 +38,49 @@ namespace Q.Proxy
         public Listener(IPEndPoint endPoint, IPEndPoint proxy, bool decryptSSL = false)
         {
             this.Proxy = proxy;
-            m_tcpListener = new TcpListener(endPoint);
-            m_repeater = new SocksRepeater((IPEndPoint)(m_tcpListener.LocalEndpoint)); //new HttpRepeater(proxy, decryptSSL);
+            //m_tcpListener = new TcpListener(endPoint);
+            this.m_ListenSocket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            this.m_ListenSocket.Bind(endPoint);
+            m_repeater = new SocksRepeater((IPEndPoint)(endPoint)); //new HttpRepeater(proxy, decryptSSL);
         }
 
         #endregion
 
         public Listener Start()
         {
-            this.m_tcpListener.Start(50);
+            this.m_ListenSocket.Listen(500);
+            ThreadPool.SetMinThreads(1000, 1000);
+            Task.Run(() =>
+            {
+                while (true)
+                {
+                    var clientSocket = this.m_ListenSocket.Accept();
+                    Task.Run(() =>
+                    {
+                        using (Stream netStream = new NetworkStream(clientSocket, true))
+                        {
+                            try
+                            {
+                                m_repeater.Relay(netStream);
+                            }
+                            catch (SocketException)
+                            {
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.PublishException(ex);
+                            }
+                        }
+                    });
+                }
+            });
             Logger.Info(this.ToString());
-            Accept(this.m_tcpListener);
             return this;
         }
 
         public Listener Stop()
         {
-            this.m_tcpListener.Stop();
+            this.m_ListenSocket.Shutdown(SocketShutdown.Both);
             return this;
         }
 
@@ -59,7 +88,7 @@ namespace Q.Proxy
         {
             StringBuilder sb = new StringBuilder()
                 .AppendLine("----------------------------------------------------------------------")
-                .AppendFormat("Listen Address\t:\t{0}\n", this.m_tcpListener.LocalEndpoint)
+                .AppendFormat("Listen Address\t:\t{0}\n", this.m_ListenSocket.LocalEndPoint)
                 .AppendFormat("Repeater Type\t:\t{0}\n", m_repeater);
             if (this.Proxy != null)
             {
@@ -69,26 +98,26 @@ namespace Q.Proxy
             return sb.ToString();
         }
 
-        private void Accept(TcpListener listener)
-        {
-            listener.AcceptTcpClientAsync().ContinueWith(async (clientAsync) =>
-            {
-                using (TcpClient client = await clientAsync)
-                {
-                    Accept(listener);
-                    using (NetworkStream networkStream = client.GetStream())
-                    {
-                        try
-                        {
-                            m_repeater.Relay(networkStream);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.PublishException(ex);
-                        }
-                    }
-                }
-            });
-        }
+        //private void Accept(TcpListener listener)
+        //{
+        //    listener.AcceptTcpClientAsync().ContinueWith(async (clientAsync) =>
+        //    {
+        //        using (TcpClient client = await clientAsync)
+        //        {
+        //            Accept(listener);
+        //            using (NetworkStream networkStream = client.GetStream())
+        //            {
+        //                try
+        //                {
+        //                    m_repeater.Relay(networkStream);
+        //                }
+        //                catch (Exception ex)
+        //                {
+        //                    Logger.PublishException(ex);
+        //                }
+        //            }
+        //        }
+        //    });
+        //}
     }
 }

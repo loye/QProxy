@@ -57,7 +57,7 @@ namespace Q.Net
         public async Task<Stream> ConnectAsServerAsync(Stream localStream, string host, bool decryptSSL)
         {
             // Send connected response to local
-            byte[] responseBin = new Net.HttpResponseHeader(200, Net.HttpStatus.Connection_Established).ToBinary();
+            byte[] responseBin = new Net.HttpResponseHeader(200, Q.Net.HttpStatus.Connection_Established).ToBinary();
             localStream.Write(responseBin, 0, responseBin.Length);
             // Decrypt SSL
             if (decryptSSL)
