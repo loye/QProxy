@@ -18,8 +18,6 @@ namespace Q.Net.Web
             var request = context.Request;
             var response = context.Response;
 
-            //ThreadPool.SetMinThreads(1000, 1000);
-
             int minWorkerThreads, minCompletionPortThreads, maxWorkerThreads, maxCompletionPortThreads;
             ThreadPool.GetMinThreads(out minWorkerThreads, out minCompletionPortThreads);
             ThreadPool.GetMaxThreads(out maxWorkerThreads, out maxCompletionPortThreads);

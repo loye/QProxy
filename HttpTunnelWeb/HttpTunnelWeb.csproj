@@ -58,12 +58,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DebugHandler.cs" />
+    <Compile Include="Global.asax.cs">
+      <DependentUpon>Global.asax</DependentUpon>
+    </Compile>
     <Compile Include="HttpTunnelHandler.cs" />
     <Compile Include="HttpTunnelModule.cs" />
     <Compile Include="HttpTunnelNode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Global.asax" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
