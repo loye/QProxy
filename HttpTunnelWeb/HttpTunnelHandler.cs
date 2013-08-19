@@ -14,7 +14,7 @@ namespace Q.Net.Web
 
         public bool IsReusable
         {
-            get { return false; }
+            get { return true; }
         }
 
         public void ProcessRequest(HttpContext context)
@@ -38,11 +38,11 @@ namespace Q.Net.Web
         {
             var request = context.Request;
             var response = context.Response;
-            string action = request["Action"];
+            string action = request["Action"] ?? String.Empty;
 
-            switch (action)
+            switch (action.ToLower())
             {
-                case "Info":
+                case "info":
                     response.Write(HttpTunnelNode.GetDebugInfo().Replace("\r\n", "<br />"));
                     break;
 
@@ -65,13 +65,13 @@ namespace Q.Net.Web
             var request = context.Request;
             var response = context.Response;
             string id = request.Headers["Q-ID"];
-            string action = request.Headers["Q-Action"];
+            string action = request.Headers["Q-Action"] ?? String.Empty;
             response.Headers["Q-Action"] = action;
             try
             {
-                switch (action)
+                switch (action.ToLower())
                 {
-                    case "CONNECT":
+                    case "connect":
                         {
                             string host = request.Headers["Q-Host"];
                             string ip = request.Headers["Q-IP"];
@@ -84,7 +84,7 @@ namespace Q.Net.Web
                         }
                         break;
 
-                    case "WRITE":
+                    case "write":
                         {
                             int length = 0;
                             using (Stream inputStream = request.InputStream)
@@ -100,7 +100,7 @@ namespace Q.Net.Web
                         }
                         break;
 
-                    case "READ":
+                    case "read":
                         {
                             int len = 0;
                             using (Stream outputStream = response.OutputStream)
@@ -121,7 +121,7 @@ namespace Q.Net.Web
                         }
                         break;
 
-                    case "CLOSE":
+                    case "close":
                         {
                             HttpTunnelNode.Close(id);
                             response.Headers["Q-Message"] = "CLOSE";

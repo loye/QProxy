@@ -59,19 +59,21 @@ namespace Q.Net.Web
 
             public NetworkStream Stream { get; set; }
 
+            private Socket m_socket;
+
             public Tunnel(string id, string host, IPEndPoint endPoint)
             {
                 this.ID = id;
                 this.Host = host;
                 this.IPEndPoint = endPoint;
-                Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                socket.Connect(endPoint);
-                this.Stream = new NetworkStream(socket, true);
+                this.m_socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                this.m_socket.Connect(endPoint);
+                this.Stream = new NetworkStream(this.m_socket, true);
             }
 
             public override string ToString()
             {
-                return String.Format("[ID: {0}, Host: {1}, IPEndPoint: {2}]", this.ID, this.Host, this.IPEndPoint);
+                return String.Format("{{ ID: {0}, Host: {1}, IPEndPoint: {2} }}", this.ID, this.Host, this.IPEndPoint);
             }
 
             public void Dispose()

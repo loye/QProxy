@@ -58,7 +58,6 @@ namespace Q.Net.Web
                                     {
                                         remoteStream.Write(buffer, 0, len);
                                     }
-                                    Task.WaitAll(remoteTask);
                                 });
                                 Task.WaitAny(localTask, remoteTask);
                             }
