@@ -95,7 +95,7 @@ namespace Q.Proxy
             //remoteStream = new NetworkStream(socket, true);
 
             remoteStream = new HttpTunnelStream(
-                //"http://localhost:1008/b",
+                //"http://localhost:1008/tunnel",
                 "https://tunnel.apphb.com/tunnel",
                 connectRequest.AddressType == 1 ? connectRequest.IPAddress.ToString() : connectRequest.Host,
                 connectRequest.Port
