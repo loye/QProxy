@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 
 namespace Q.Net
 {
@@ -66,6 +67,11 @@ namespace Q.Net
                 result = new byte[0];
             }
             return result;
+        }
+
+        public override string ToString()
+        {
+            return ASCIIEncoding.ASCII.GetString(this.ToBinary());
         }
 
         private bool ValidateChunkedBlock()

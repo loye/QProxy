@@ -45,30 +45,34 @@ namespace CMDStarter
 
         private static void TestHttpTunnelStream()
         {
+            ThreadPool.SetMinThreads(1000, 1000);
+
             string source = @"GET http://www.baidu.com/ HTTP/1.1
 Host: www.baidu.com
 
 ";
             var bin = ASCIIEncoding.ASCII.GetBytes(source);
 
-            using (var tunnel = new HttpTunnelStream("http://localhost:1008/", "www.baidu.com", 80))
-            {
-                tunnel.Write(bin, 0, bin.Length);
-                tunnel.Flush();
 
-                Task t2 = Task.Run(() =>
+            Task[] tasks = new Task[1000];
+
+            for (int i = 0; i < tasks.Length; i++)
+            {
+                tasks[i] = Task.Run(() =>
                 {
-                    byte[] buffer = new byte[4096];
-                    var len = tunnel.Read(buffer, 0, 4096);
-                    while (len > 0)
+                    using (var tunnel = new HttpTunnelStream("http://localhost:1008/b", "www.baidu.com", 80))
                     {
-                        Console.Write(ASCIIEncoding.ASCII.GetString(buffer, 0, len));
-                        len = tunnel.Read(buffer, 0, 4096);
+                        byte[] buffer = new byte[512];
+                        tunnel.Write(bin, 0, bin.Length);
+                        int len = tunnel.Read(buffer, 0, 512);
+                        Console.WriteLine(ASCIIEncoding.ASCII.GetString(buffer, 0, len));
+                        Thread.Sleep(3000);
                     }
                 });
-
-                System.Threading.Thread.Sleep(1000);
             }
+            Task.WaitAll(tasks);
+            Console.WriteLine("End");
+
 
 
         }

@@ -28,24 +28,16 @@ namespace Q.Proxy
             {
                 if (remoteStream != null)
                 {
-                    Stopwatch w = new Stopwatch();
-                    w.Start();
-
                     var remoteTask = Task.Run(() =>
                     {
                         Transfer(remoteStream, localStream);
-                        Console.WriteLine("r");
                     });
                     var localTask = Task.Run(() =>
                     {
                         Transfer(localStream, remoteStream);
-                        Console.WriteLine("l");
                     });
 
                     Task.WaitAny(remoteTask, localTask);
-
-                    Console.WriteLine(w.Elapsed + " Transfer Time");
-                    w.Stop();
                 }
             }
         }
@@ -96,19 +88,19 @@ namespace Q.Proxy
         private Stream GetRemoteStream(ConnectRequest connectRequest)
         {
             Stream remoteStream = null;
-     /*
-            IPEndPoint endPoint = new IPEndPoint(connectRequest.AddressType == 1 ? connectRequest.IPAddress : DnsHelper.GetHostAddress(connectRequest.Host), connectRequest.Port);
-            Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            socket.Connect(endPoint);
-            remoteStream = new NetworkStream(socket, true);
-*/
-       
-                       remoteStream = new HttpTunnelStream(
-                           "http://localhost:1008/b", //https://tunnel.apphb.com/home
-                           connectRequest.AddressType == 1 ? connectRequest.IPAddress.ToString() : connectRequest.Host,
-                           connectRequest.Port
-                           , null);// new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8888));
-            
+
+            //IPEndPoint endPoint = new IPEndPoint(connectRequest.AddressType == 1 ? connectRequest.IPAddress : DnsHelper.GetHostAddress(connectRequest.Host), connectRequest.Port);
+            //Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            //socket.Connect(endPoint);
+            //remoteStream = new NetworkStream(socket, true);
+
+            remoteStream = new HttpTunnelStream(
+                //"http://localhost:1008/b",
+                "https://tunnel.apphb.com/tunnel",
+                connectRequest.AddressType == 1 ? connectRequest.IPAddress.ToString() : connectRequest.Host,
+                connectRequest.Port
+                , null);// new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8888));
+
             return remoteStream;
         }
 

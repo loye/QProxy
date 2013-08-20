@@ -25,10 +25,11 @@ namespace Q.Net
     {
         public sealed class Action
         {
-            public const string Connect = "CONNECT";
-            public const string Write = "WRITE";
-            public const string Read = "READ";
-            public const string Close = "CLOSE";
+            public const string Connect = "connect";
+            public const string Write = "write";
+            public const string Read = "read";
+            public const string Close = "close";
+            public const string Debug = "debug";
         }
     }
 }

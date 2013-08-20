@@ -13,8 +13,6 @@ namespace Q.Proxy
 {
     public class Listener
     {
-        //private TcpListener m_tcpListener;
-
         private Socket m_ListenSocket;
 
         private Repeater m_repeater;
@@ -38,7 +36,6 @@ namespace Q.Proxy
         public Listener(IPEndPoint endPoint, IPEndPoint proxy, bool decryptSSL = false)
         {
             this.Proxy = proxy;
-            //m_tcpListener = new TcpListener(endPoint);
             this.m_ListenSocket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             this.m_ListenSocket.Bind(endPoint);
             m_repeater = new SocksRepeater((IPEndPoint)(endPoint)); //new HttpRepeater(proxy, decryptSSL);
@@ -50,30 +47,10 @@ namespace Q.Proxy
         {
             this.m_ListenSocket.Listen(500);
             ThreadPool.SetMinThreads(1000, 1000);
-            Task.Run(() =>
-            {
-                while (true)
-                {
-                    var clientSocket = this.m_ListenSocket.Accept();
-                    Task.Run(() =>
-                    {
-                        using (Stream netStream = new NetworkStream(clientSocket, true))
-                        {
-                            try
-                            {
-                                m_repeater.Relay(netStream);
-                            }
-                            catch (SocketException)
-                            {
-                            }
-                            catch (Exception ex)
-                            {
-                                Logger.PublishException(ex);
-                            }
-                        }
-                    });
-                }
-            });
+
+            Task.Run(new Action(Accept));
+            Task.Run(new Action(Accept));
+
             Logger.Info(this.ToString());
             return this;
         }
@@ -98,26 +75,38 @@ namespace Q.Proxy
             return sb.ToString();
         }
 
-        //private void Accept(TcpListener listener)
-        //{
-        //    listener.AcceptTcpClientAsync().ContinueWith(async (clientAsync) =>
-        //    {
-        //        using (TcpClient client = await clientAsync)
-        //        {
-        //            Accept(listener);
-        //            using (NetworkStream networkStream = client.GetStream())
-        //            {
-        //                try
-        //                {
-        //                    m_repeater.Relay(networkStream);
-        //                }
-        //                catch (Exception ex)
-        //                {
-        //                    Logger.PublishException(ex);
-        //                }
-        //            }
-        //        }
-        //    });
-        //}
+        #region Private Methods
+
+        private void Accept()
+        {
+            while (true)
+            {
+                var clientSocket = this.m_ListenSocket.Accept();
+                Task.Run(() =>
+                {
+                    Relay(clientSocket);
+                });
+            }
+        }
+
+        private void Relay(Socket clientSocket)
+        {
+            using (Stream netStream = new NetworkStream(clientSocket, true))
+            {
+                try
+                {
+                    m_repeater.Relay(netStream);
+                }
+                catch (SocketException)
+                {
+                }
+                catch (Exception ex)
+                {
+                    Logger.PublishException(ex);
+                }
+            }
+        }
+
+        #endregion
     }
 }

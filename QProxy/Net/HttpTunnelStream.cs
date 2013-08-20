@@ -2,6 +2,7 @@
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 
 namespace Q.Net
 {
@@ -21,63 +22,55 @@ namespace Q.Net
 
         public Stream ReadStream { get; private set; }
 
+
         public HttpTunnelStream(string handler, string destHost, int destPort, IPEndPoint proxy = null)
         {
-            var time1 = DateTime.Now;
-
             this.ID = Guid.NewGuid().ToString("N");
             this.HandlerUri = new Uri(handler);
             this.Proxy = proxy;
             this.DestHost = destHost;
             this.DestPort = destPort;
             this.WriteStream = this.Connect();
+            this.ReadStream = this.Connect();
 
             var httpHeader = this.NewRequestHeader(HttpHeaderCustomValue.Action.Connect);
             httpHeader[HttpHeaderCustomKey.Host] = this.DestHost;
             httpHeader[HttpHeaderCustomKey.Port] = this.DestPort;
             this.WriteStream.Write(httpHeader.ToBinary(), 0, httpHeader.Length);
 
-            HttpPackage package = HttpPackage.Parse(this.WriteStream);
-
-            Console.WriteLine(package.HttpHeader[HttpHeaderCustomKey.Message] + " [Time: " + (DateTime.Now - time1) + "]");
+            HttpPackage package = RecievePackage(this.WriteStream);
         }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            var time1 = DateTime.Now;
-
             int lenght = 0;
             if (this.ReadStream == null)
             {
+                Console.WriteLine("null");
                 this.ReadStream = this.Connect();
             }
             var httpHeader = this.NewRequestHeader(HttpHeaderCustomValue.Action.Read);
             httpHeader[HttpHeaderCustomKey.Length] = count;
             this.ReadStream.Write(httpHeader.ToBinary(), 0, httpHeader.Length);
-            HttpPackage package = HttpPackage.Parse(this.ReadStream);
+            HttpPackage package = RecievePackage(this.ReadStream);
             byte[] bin = package.HttpContent.ToBinary();
             lenght = bin.Length;
             Array.Copy(bin, 0, buffer, offset, lenght);
-
-            Console.WriteLine(package.HttpHeader[HttpHeaderCustomKey.Message] + " [Time: " + (DateTime.Now - time1) + "]");
             return lenght;
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            var time1 = DateTime.Now;
-
             if (this.WriteStream == null)
             {
+                Console.WriteLine("null");
                 this.WriteStream = this.Connect();
             }
             var httpHeader = this.NewRequestHeader(HttpHeaderCustomValue.Action.Write);
             httpHeader.ContentLength = count;
             this.WriteStream.Write(httpHeader.ToBinary(), 0, httpHeader.Length);
             this.WriteStream.Write(buffer, offset, count);
-            HttpPackage package = HttpPackage.Parse(this.WriteStream);
-
-            Console.WriteLine(package.HttpHeader[HttpHeaderCustomKey.Message] + " [Time: " + (DateTime.Now - time1) + "]");
+            HttpPackage package = RecievePackage(this.WriteStream);
         }
 
 
@@ -101,6 +94,20 @@ namespace Q.Net
             httpHeader[HttpHeaderCustomKey.Action] = action;
             httpHeader.ContentLength = 0;
             return httpHeader;
+        }
+
+        private HttpPackage RecievePackage(Stream stream)
+        {
+            HttpPackage package = HttpPackage.Parse(stream);
+            if (package == null)
+            {
+                throw new Exception("HttpPackage is null");
+            }
+            if (package.HttpHeader[HttpHeaderCustomKey.Exception] != null)
+            {
+                throw new Exception(String.Format("Remote Expection: [{0}]\r\n{1}", package.HttpHeader[HttpHeaderCustomKey.Exception].ToString().Trim(), package.HttpContent.ToString()));
+            }
+            return package;
         }
 
 
@@ -133,8 +140,6 @@ namespace Q.Net
 
         protected override void Dispose(bool disposing)
         {
-            var time1 = DateTime.Now;
-
             if (this.WriteStream != null)
             {
                 this.WriteStream.Dispose();
@@ -143,14 +148,29 @@ namespace Q.Net
             {
                 this.ReadStream.Dispose();
             }
-            var httpHeader = this.NewRequestHeader(HttpHeaderCustomValue.Action.Close);
-            Stream stream = this.Connect();
-            stream.Write(httpHeader.ToBinary(), 0, httpHeader.Length);
-            HttpPackage package = HttpPackage.Parse(stream);
-            stream.Dispose();
+            try
+            {
+                var httpHeader = this.NewRequestHeader(HttpHeaderCustomValue.Action.Close);
+                Stream stream = this.Connect();
+                stream.Write(httpHeader.ToBinary(), 0, httpHeader.Length);
+                HttpPackage package = RecievePackage(stream);
+                stream.Dispose();
+            }
+            catch (Exception)
+            {
+            }
+            base.Dispose(disposing);
+        }
+
+        public void Debug()
+        {
+            var time1 = DateTime.Now;
+            var httpHeader = this.NewRequestHeader(HttpHeaderCustomValue.Action.Debug);
+            this.WriteStream.Write(httpHeader.ToBinary(), 0, httpHeader.Length);
+            HttpPackage package = RecievePackage(this.WriteStream);
 
             Console.WriteLine(package.HttpHeader[HttpHeaderCustomKey.Message] + " [Time: " + (DateTime.Now - time1) + "]");
-            base.Dispose(disposing);
+
         }
 
         #region Not supported
@@ -345,5 +365,5 @@ namespace Q.Net
 
         #endregion
     }
-     * */
+    */
 }

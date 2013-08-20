@@ -65,11 +65,11 @@ namespace Q.Net.Web
             var request = context.Request;
             var response = context.Response;
             string id = request.Headers["Q-ID"];
-            string action = request.Headers["Q-Action"] ?? String.Empty;
+            string action = (request.Headers["Q-Action"] ?? String.Empty).ToLower();
             response.Headers["Q-Action"] = action;
             try
             {
-                switch (action.ToLower())
+                switch (action)
                 {
                     case "connect":
                         {
@@ -125,6 +125,11 @@ namespace Q.Net.Web
                         {
                             HttpTunnelNode.Close(id);
                             response.Headers["Q-Message"] = "CLOSE";
+                        }
+                        break;
+                    case "debug":
+                        {
+                            response.Headers["Q-Message"] = "Debug";
                         }
                         break;
                     default:
