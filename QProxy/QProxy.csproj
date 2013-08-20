@@ -40,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Net\HttpTunnelStream.cs" />
+    <Compile Include="Net\Socks\SocksConnector.cs" />
     <Compile Include="Net\_Constants.cs" />
     <Compile Include="Q\CAHelper.cs" />
     <Compile Include="Net\DnsHelper.cs" />

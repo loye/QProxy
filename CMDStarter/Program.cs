@@ -24,23 +24,42 @@ namespace CMDStarter
             //DateTime time2 = DateTime.Now;
             //Console.WriteLine(time2 - time1);
 
-            new Listener("0.0.0.0", 2000, false).Start();
+            new Listener("127.0.0.1", 2000, false).Start();
 
 
             //TestHttpTunnelStream();
-
-
-
-
-
-
-
 
 
             while (true)
             {
                 Thread.Sleep(int.MaxValue);
             }
+        }
+
+        private static void TestSocks()
+        {
+            // V5
+            //IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2001);
+            //Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            //socket.Connect(endPoint);
+            //var remoteStream = new NetworkStream(socket, true);
+            //byte[] buffer = new byte[100];
+            //remoteStream.Write(new byte[] { 5, 0 }, 0, 2);
+            //var len = remoteStream.Read(buffer, 0, 100);
+            //remoteStream.Write(new byte[] { 5, 1, 0, 3, 12, 50, 49, 54, 46, 49, 57, 52, 46, 55, 48, 46, 54, 1, 187 }, 0, 19);
+            //len = remoteStream.Read(buffer, 0, 100);
+
+            //V4
+            //IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2001);
+            //Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            //socket.Connect(endPoint);
+            //var remoteStream = new NetworkStream(socket, true);
+            //byte[] buffer = new byte[100];
+            //remoteStream.Write(new byte[] { 4, 1, 0, 80, 127, 0, 0, 1, 108, 113, 105, 117, 0 }, 0, 13);
+            //var len = remoteStream.Read(buffer, 0, 100);
+
+
+
         }
 
         private static void TestHttpTunnelStream()

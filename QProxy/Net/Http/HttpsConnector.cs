@@ -33,14 +33,14 @@ namespace Q.Net
             }
         }
 
-        public async Task<Stream> ConnectAsClientAsync(Stream remoteStream, string host, int port, IPEndPoint proxy, bool decryptSSL)
+        public async Task<Stream> ConnectAsClientAsync(Stream serverStream, string host, int port, IPEndPoint proxy, bool decryptSSL)
         {
             // Send connect request to http proxy server
             if (proxy != null)
             {
                 byte[] requestBin = new Net.HttpRequestHeader(HttpMethod.Connect, host, port).ToBinary();
-                remoteStream.Write(requestBin, 0, requestBin.Length);
-                HttpPackage response = HttpPackage.Parse(remoteStream);
+                serverStream.Write(requestBin, 0, requestBin.Length);
+                HttpPackage response = HttpPackage.Parse(serverStream);
                 if (response == null || (response.HttpHeader as Net.HttpResponseHeader).StatusCode != 200)
                 {
                     throw new Exception(String.Format("Connect to proxy server[{0}:{1}] with SSL failed!", host, port));
@@ -49,22 +49,22 @@ namespace Q.Net
             // Decrypt SSL
             if (decryptSSL)
             {
-                remoteStream = await SwitchToSslStreamAsClientAsync(remoteStream, host);
+                serverStream = await SwitchToSslStreamAsClientAsync(serverStream, host);
             }
-            return remoteStream;
+            return serverStream;
         }
 
-        public async Task<Stream> ConnectAsServerAsync(Stream localStream, string host, bool decryptSSL)
+        public async Task<Stream> ConnectAsServerAsync(Stream clientStream, string host, bool decryptSSL)
         {
             // Send connected response to local
             byte[] responseBin = new Net.HttpResponseHeader(200, Q.Net.HttpStatus.Connection_Established).ToBinary();
-            localStream.Write(responseBin, 0, responseBin.Length);
+            clientStream.Write(responseBin, 0, responseBin.Length);
             // Decrypt SSL
             if (decryptSSL)
             {
-                localStream = await SwitchToSslStreamAsServerAsync(localStream, host);
+                clientStream = await SwitchToSslStreamAsServerAsync(clientStream, host);
             }
-            return localStream;
+            return clientStream;
         }
 
         private async Task<SslStream> SwitchToSslStreamAsClientAsync(Stream stream, string host)

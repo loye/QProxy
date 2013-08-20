@@ -38,7 +38,7 @@ namespace Q.Proxy
             this.Proxy = proxy;
             this.m_ListenSocket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             this.m_ListenSocket.Bind(endPoint);
-            m_repeater = new SocksRepeater((IPEndPoint)(endPoint)); //new HttpRepeater(proxy, decryptSSL);
+            m_repeater = new SocksRepeater(); //new HttpRepeater(proxy, decryptSSL);
         }
 
         #endregion
@@ -84,6 +84,7 @@ namespace Q.Proxy
                 var clientSocket = this.m_ListenSocket.Accept();
                 Task.Run(() =>
                 {
+                    Console.WriteLine(String.Format("Accept: {0}", clientSocket.RemoteEndPoint));
                     Relay(clientSocket);
                 });
             }
