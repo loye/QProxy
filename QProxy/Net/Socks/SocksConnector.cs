@@ -153,6 +153,7 @@ namespace Q.Net
                                 if (buffer[i] == 0)
                                 {
                                     host = ASCIIEncoding.ASCII.GetString(buffer, index, i - index);
+                                    ip = null;
                                     break;
                                 }
                             }
