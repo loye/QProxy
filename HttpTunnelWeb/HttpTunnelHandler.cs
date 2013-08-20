@@ -46,6 +46,10 @@ namespace Q.Net.Web
                     response.Write(HttpTunnelNode.GetDebugInfo().Replace("\r\n", "<br />"));
                     break;
 
+                case "clear":
+                    HttpTunnelNode.Clear();
+                    break;
+
                 default:
                     response.Write("It's working!");
                     break;

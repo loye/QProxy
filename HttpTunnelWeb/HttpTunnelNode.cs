@@ -35,6 +35,11 @@ namespace Q.Net.Web
             }
         }
 
+        public static void Clear()
+        {
+            tunnelPool.Clear();
+        }
+
         public static string GetDebugInfo()
         {
             StringBuilder sb = new StringBuilder();

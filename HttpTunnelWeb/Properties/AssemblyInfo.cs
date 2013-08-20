@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("HttpTunnelWeb")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("MicroStrategy, Inc.")]
+[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("HttpTunnelWeb")]
-[assembly: AssemblyCopyright("Copyright © MicroStrategy, Inc. 2013")]
+[assembly: AssemblyCopyright("Copyright ©  2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
