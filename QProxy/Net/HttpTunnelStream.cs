@@ -82,7 +82,7 @@ namespace Q.Net
             Stream stream = new NetworkStream(socket, true);
             if (this.HandlerUri.Scheme == Uri.UriSchemeHttps)
             {
-                stream = HttpsConnector.Instance.ConnectAsClientAsync(stream, this.HandlerUri.Host, this.HandlerUri.Port, this.Proxy, true).WaitResult();
+                stream = HttpsConnector.Instance.ConnectAsClientAsync(stream, this.HandlerUri.Host, this.HandlerUri.Port, true, this.Proxy != null).WaitResult();
             }
             return stream;
         }

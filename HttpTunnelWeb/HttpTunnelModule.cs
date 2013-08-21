@@ -8,6 +8,7 @@ using System.Web;
 
 namespace Q.Net.Web
 {
+    [Obsolete("Not used anymore")]
     public class HttpTunnelModule : IHttpModule
     {
         #region IHttpModule Members

@@ -98,8 +98,8 @@ namespace Q.Net
                 isValid = package.HttpContent
                     .Refresh(source, startIndex + package.HttpHeader.Length, length - package.HttpHeader.Length)
                     .Validate(package.HttpHeader.ContentLength);
-                package.IsValid = isValid;
             }
+            package.IsValid = isValid;
             return isValid;
         }
 

@@ -1,9 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Net;
-using System.Net.Security;
 using System.Net.Sockets;
-using System.Security.Authentication;
+using System.Text;
 using System.Threading.Tasks;
 using Q.Net;
 
@@ -13,137 +12,118 @@ namespace Q.Proxy
     {
         public bool DecryptSSL { get; set; }
 
-        public HttpRepeater(IPEndPoint proxy = null, bool decryptSSL = false)
-            : base(proxy)
+        public HttpRepeater()
+            : base()
         {
-            this.DecryptSSL = decryptSSL;
+            this.DecryptSSL = false;
         }
 
         public override void Relay(Stream localStream)
         {
-            //Transmit(localStream, null);
             Stream remoteStream = null;
-            byte[] buffer = new byte[4096];
+            bool transparent = false;
 
-            using (MemoryStream mem = new MemoryStream())
+            var remoteTask = new Task(() =>
             {
-                HttpHeader header = null;
-                for (int len = localStream.Read(buffer, 0, buffer.Length); len > 0; len = localStream.Read(buffer, 0, buffer.Length))
-                {
-                    if (remoteStream == null)
-                    {
-                        mem.Write(buffer, 0, len);
-                        if (HttpHeader.TryParse(mem.GetBuffer(), 0, (int)mem.Length, out header))
-                        {
-                            var requestHeader = header as Q.Net.HttpRequestHeader;
-                            remoteStream = this.Connect(ref localStream, requestHeader);
+                Transfer(ref remoteStream, ref localStream, transparent);
+            });
+            var localTask = Task.Run(() =>
+            {
+                Transfer(ref localStream, ref remoteStream, transparent, (t) => { transparent = t; remoteTask.Start(); });
+            });
 
-
-                        }
-                    }
-                    else
-                    {
-                        remoteStream.Write(buffer, 0, len);
-                    }
-                }
+            Task.WaitAll(remoteTask, localTask);
+            if (remoteStream != null)
+            {
+                remoteStream.Dispose();
             }
         }
 
         #region Private Methods
 
-
-
-
-
-
-        private void Transmit(Stream fromStream, Stream toStream)
+        private void Transfer(ref Stream src, ref Stream dest, bool transparent = false, Action<bool> startRemoteTransfer = null)
         {
-            byte[] buffer = new byte[HttpPackage.BUFFER_LENGTH];
-            Task task = null;
-            bool headerComplete = false;
-            HttpPackage package = null;
-            MemoryStream mem = new MemoryStream();
-
-            for (int len = fromStream.Read(buffer, 0, buffer.Length); len > 0; len = fromStream.Read(buffer, 0, buffer.Length))
+            byte[] buffer = new byte[4096];
+            for (int pkgCount = 0; pkgCount < Int32.MaxValue; pkgCount++)
             {
-                if (toStream != null)
+                if (transparent)
                 {
-                    toStream.Write(buffer, 0, len);
-                }
-                mem.Write(buffer, 0, len);
-                HttpPackage.ValidatePackage(mem.GetBuffer(), 0, (int)mem.Length, ref package);
-                if (package != null)
-                {
-                    if (!headerComplete)
+                    for (int len = src.Read(buffer, 0, buffer.Length); len > 0; len = src.Read(buffer, 0, buffer.Length))
                     {
-                        headerComplete = true;
-                        if (package.HttpHeader is Q.Net.HttpRequestHeader)
+                        dest.Write(buffer, 0, len);
+                    }
+                    break;
+                }
+                else
+                {
+                    HttpPackage package = null;
+                    bool headerCompleted = false;
+                    using (MemoryStream mem = new MemoryStream())
+                    {
+                        for (int len = src.Read(buffer, 0, buffer.Length); len > 0; len = src.Read(buffer, 0, buffer.Length))
                         {
-                            var requestHeader = package.HttpHeader as Q.Net.HttpRequestHeader;
-                            //if (this.Proxy == null && requestHeader[HttpHeaderKey.Proxy_Connection] == "keep-alive")
-                            //{
-                            //    requestHeader[HttpHeaderKey.Proxy_Connection] = null;
-                            //    requestHeader[HttpHeaderKey.Connection] = "keep-alive";
-                            //}
-                            if (toStream == null)
+                            if (dest != null)
                             {
-                                toStream = this.Connect(ref fromStream, requestHeader);
-                                if (requestHeader.HttpMethod == HttpMethod.Connect)
+                                dest.Write(buffer, 0, len);
+                            }
+                            mem.Write(buffer, 0, len);
+                            HttpPackage.ValidatePackage(mem.GetBuffer(), 0, (int)mem.Length, ref package);
+                            if (package != null)
+                            {
+                                if (!headerCompleted)
                                 {
-                                    if (!this.DecryptSSL)
+                                    headerCompleted = true;
+                                    var requestHeader = package.HttpHeader as Q.Net.HttpRequestHeader;
+                                    if (dest == null && requestHeader != null)
                                     {
-                                        DirectRelay(fromStream, toStream);
-                                        break;
-                                    }
-                                    else
-                                    {
-                                        task = Task.Run(() => { Transmit(toStream, fromStream); });
-                                        headerComplete = false;
-                                        package = null;
-                                        mem.Dispose();
-                                        mem = new MemoryStream();
-                                        continue;
+                                        dest = this.Connect(ref src, requestHeader);
+                                        if (requestHeader.HttpMethod == HttpMethod.Connect)
+                                        {
+                                            if (!this.DecryptSSL)
+                                            {
+                                                transparent = true;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (this.Proxy == null && String.Compare(requestHeader[HttpHeaderKey.Proxy_Connection], HttpHeaderValue.Connection.Keep_Alive, true) == 0)
+                                            {
+                                                requestHeader[HttpHeaderKey.Proxy_Connection] = null;
+                                                requestHeader[HttpHeaderKey.Connection] = "keep-alive";
+                                            }
+                                            byte[] reqBin = package.ToBinary();
+                                            dest.Write(reqBin, 0, reqBin.Length);
+                                        }
+                                        startRemoteTransfer(transparent);
                                     }
                                 }
-                                else
+                                if (transparent || package.IsCompleted) // end of Package
                                 {
-                                    byte[] reqBin = package.ToBinary();
-                                    toStream.Write(reqBin, 0, reqBin.Length);
-                                    task = Task.Run(() => { Transmit(toStream, fromStream); });
+                                    Console.WriteLine(package.HttpHeader.StartLine);
+                                    break;
                                 }
                             }
                         }
                     }
-
-                    if (package.IsCompleted)
-                    {
-                        Console.WriteLine(package.HttpHeader.StartLine);
-                        mem.Dispose();
-                        break;
-                    }
                 }
-            } // end of for
-
-            if (task != null)
-            {
-                task.Wait();
             }
-        }
-
-        private void DirectRelay(Stream localStream, Stream remoteStream)
-        {
-            Task.WaitAll(localStream.CopyToAsync(remoteStream), remoteStream.CopyToAsync(localStream));
         }
 
         private Stream Connect(ref Stream localStream, Q.Net.HttpRequestHeader requestHeader)
         {
-            IPEndPoint endPoint = this.Proxy ?? new IPEndPoint(DnsHelper.GetHostAddress(requestHeader.Host), requestHeader.Port);
-            Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            socket.Connect(endPoint);
-            Stream remoteStream = new NetworkStream(socket, true);
+            //IPEndPoint endPoint = this.Proxy ?? new IPEndPoint(DnsHelper.GetHostAddress(requestHeader.Host), requestHeader.Port);
+            //Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            //socket.Connect(endPoint);
+            //Stream remoteStream = new NetworkStream(socket, true);
+
+            Stream remoteStream = new HttpTunnelStream(
+                "http://localhost:1008/tunnel",
+                //"https://tunnel.apphb.com/tunnel",
+                requestHeader.Host, requestHeader.Port, null);
+
             if (requestHeader.HttpMethod == HttpMethod.Connect)
             {
-                var remoteTask = HttpsConnector.Instance.ConnectAsClientAsync(remoteStream, requestHeader.Host, requestHeader.Port, this.Proxy, this.DecryptSSL);
+                var remoteTask = HttpsConnector.Instance.ConnectAsClientAsync(remoteStream, requestHeader.Host, requestHeader.Port, this.DecryptSSL, this.Proxy != null); // TODO
                 var localTask = HttpsConnector.Instance.ConnectAsServerAsync(localStream, requestHeader.Host, this.DecryptSSL);
                 Task.WaitAll(remoteTask, localTask);
                 remoteStream = remoteTask.Result;

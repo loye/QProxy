@@ -8,10 +8,10 @@ using System.Text;
 namespace Q.Net
 {
     /// <summary>
-    /// Socks4
+    /// Socks4:
     ///     |VER{1}4|ATYP{1}1|DST.PORT{2}|DST.ADDR{4}|USERID{}|END{1}0|[?(Socks4a)DST.ADDR=0,0,0,1?DST.HOST{}|END{1}0]
-    ///     |VER{1}4|REP{1}90|DST.PORT{2}|DST.ADDR{4}|
-    /// Socks5
+    ///     |REP{1}0|PROTOCOL{1}90|DST.PORT{2}|DST.ADDR{4}|
+    /// Socks5:
     ///     |VER{1}5|NMETHODS{1}|METHODS{NMETHODS}|
     ///     |VER{1}5|METHOD{1}|
     ///     |VER{1}5|CMD{1}[1(TCP)|3(UDP)]|RSV{1}0|ATYP{1}[1(IPv4)/3(HOST)/4(IPv6)]|[DST.ADDR{4}/DST.NHOST{1}|DST.HOST{DST.NHOST}]|DST.PORT{2}|
@@ -45,18 +45,18 @@ namespace Q.Net
 
         #region Client Socks5
 
-        public Stream ConnectAsClientV5(IPEndPoint endPoint, IPAddress ip, int port)
+        public Stream ConnectAsClientV5(IPEndPoint serverEndPoint, IPAddress ip, int port)
         {
-            Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            socket.Connect(endPoint);
+            Socket socket = new Socket(serverEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            socket.Connect(serverEndPoint);
             var remoteStream = new NetworkStream(socket, true);
             return this.ConnectAsClientV5(remoteStream, ip, port);
         }
 
-        public Stream ConnectAsClientV5(IPEndPoint endPoint, string host, int port)
+        public Stream ConnectAsClientV5(IPEndPoint serverEndPoint, string host, int port)
         {
-            Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            socket.Connect(endPoint);
+            Socket socket = new Socket(serverEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            socket.Connect(serverEndPoint);
             var remoteStream = new NetworkStream(socket, true);
             return this.ConnectAsClientV5(remoteStream, host, port);
         }
@@ -98,10 +98,10 @@ namespace Q.Net
 
         #region Client Socks4
 
-        public Stream ConnectAsClientV4(IPEndPoint endPoint, IPAddress ip, int port)
+        public Stream ConnectAsClientV4(IPEndPoint serverEndPoint, IPAddress ip, int port)
         {
-            Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            socket.Connect(endPoint);
+            Socket socket = new Socket(serverEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            socket.Connect(serverEndPoint);
             var remoteStream = new NetworkStream(socket, true);
             return this.ConnectAsClientV4(remoteStream, ip, port);
         }
@@ -158,7 +158,7 @@ namespace Q.Net
                                 }
                             }
                         }
-                        clientStream.Write(new byte[] { 4, 90, buffer[2], buffer[3], buffer[4], buffer[5], buffer[6], buffer[7] }, 0, 8);
+                        clientStream.Write(new byte[] { 0, 90, buffer[2], buffer[3], buffer[4], buffer[5], buffer[6], buffer[7] }, 0, 8);
                     }
                     break;
                 case 5:

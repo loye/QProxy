@@ -14,6 +14,7 @@ namespace Q.Net.Web
         protected void Application_Start(object sender, EventArgs e)
         {
             ThreadPool.SetMinThreads(1000, 1000);
+            HttpTunnelNode.Instance.StartCleaner(600);
         }
 
         protected void Session_Start(object sender, EventArgs e)

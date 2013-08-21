@@ -8,9 +8,9 @@ namespace Q.Proxy
     {
         public IPEndPoint Proxy { get; set; }
 
-        public Repeater(IPEndPoint proxy = null)
+        public Repeater()
         {
-            this.Proxy = proxy;
+            
         }
 
         public abstract void Relay(Stream localStream);

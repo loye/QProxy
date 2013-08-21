@@ -2,6 +2,7 @@
 using System.IO;
 using System.Net;
 using System.Net.Security;
+using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Threading.Tasks;
 
@@ -33,12 +34,20 @@ namespace Q.Net
             }
         }
 
-        public async Task<Stream> ConnectAsClientAsync(Stream serverStream, string host, int port, IPEndPoint proxy, bool decryptSSL)
+        public async Task<Stream> ConnectAsClientAsync(IPEndPoint serverEndPoint, string host, int port, bool decryptSSL, bool httpProxy = false)
         {
-            // Send connect request to http proxy server
-            if (proxy != null)
+            Socket socket = new Socket(serverEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            socket.Connect(serverEndPoint);
+            Stream serverStream = new NetworkStream(socket, true);
+            return await ConnectAsClientAsync(serverStream, host, port, decryptSSL, httpProxy);
+        }
+
+        public async Task<Stream> ConnectAsClientAsync(Stream serverStream, string host, int port, bool decryptSSL, bool httpProxy = false)
+        {
+            if (httpProxy)
             {
-                byte[] requestBin = new Net.HttpRequestHeader(HttpMethod.Connect, host, port).ToBinary();
+                // Send connect request to http proxy server
+                byte[] requestBin = new Q.Net.HttpRequestHeader(HttpMethod.Connect, host, port).ToBinary();
                 serverStream.Write(requestBin, 0, requestBin.Length);
                 HttpPackage response = HttpPackage.Parse(serverStream);
                 if (response == null || (response.HttpHeader as Net.HttpResponseHeader).StatusCode != 200)
@@ -56,8 +65,8 @@ namespace Q.Net
 
         public async Task<Stream> ConnectAsServerAsync(Stream clientStream, string host, bool decryptSSL)
         {
-            // Send connected response to local
-            byte[] responseBin = new Net.HttpResponseHeader(200, Q.Net.HttpStatus.Connection_Established).ToBinary();
+            // Send connected response to client
+            byte[] responseBin = new Q.Net.HttpResponseHeader(200, Q.Net.HttpStatus.Connection_Established).ToBinary();
             clientStream.Write(responseBin, 0, responseBin.Length);
             // Decrypt SSL
             if (decryptSSL)

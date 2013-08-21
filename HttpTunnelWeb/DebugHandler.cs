@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Threading;
 using System.Web;
 
@@ -17,24 +18,39 @@ namespace Q.Net.Web
         {
             var request = context.Request;
             var response = context.Response;
-            
-            int minWorkerThreads, minCompletionPortThreads, maxWorkerThreads, maxCompletionPortThreads;
-            ThreadPool.GetMinThreads(out minWorkerThreads, out minCompletionPortThreads);
-            ThreadPool.GetMaxThreads(out maxWorkerThreads, out maxCompletionPortThreads);
+            response.ContentType = "text/html; charset=utf-8";
 
-            response.Write("<table>");
-
-            response.Write(GetTableLine("MinWorkerThreads", minWorkerThreads.ToString()));
-            response.Write(GetTableLine("MinCompletionPortThreads", minCompletionPortThreads.ToString()));
-            response.Write(GetTableLine("MaxWorkerThreads", maxWorkerThreads.ToString()));
-            response.Write(GetTableLine("MaxCompletionPortThreads", maxCompletionPortThreads.ToString()));
-
-            response.Write("</table>");
+            response.Write(GetThreadPoolInfo());
+            response.Write(GetHttpTunnelInfo());
         }
 
-        private string GetTableLine(string name, string value)
+        private string GetThreadPoolInfo()
         {
-            return String.Format("<tr><td>{0}</td><td>{1}</td></tr>", name, value);
+            int minWorkerThreads, minCompletionPortThreads,
+               maxWorkerThreads, maxCompletionPortThreads,
+               availableWorkerThreads, availableCompletionPortThreads;
+
+            ThreadPool.GetMinThreads(out minWorkerThreads, out minCompletionPortThreads);
+            ThreadPool.GetMaxThreads(out maxWorkerThreads, out maxCompletionPortThreads);
+            ThreadPool.GetAvailableThreads(out availableWorkerThreads, out availableCompletionPortThreads);
+
+            return new StringBuilder()
+                .Append("<div>ThreadPool Information</div>")
+                .Append("<table>")
+                .AppendFormat("<tr><td>{0}</td><td>{1}</td></tr>", "MinWorkerThreads", minWorkerThreads.ToString())
+                .AppendFormat("<tr><td>{0}</td><td>{1}</td></tr>", "MinCompletionPortThreads", minCompletionPortThreads.ToString())
+                .AppendFormat("<tr><td>{0}</td><td>{1}</td></tr>", "MaxWorkerThreads", maxWorkerThreads.ToString())
+                .AppendFormat("<tr><td>{0}</td><td>{1}</td></tr>", "MaxCompletionPortThreads", maxCompletionPortThreads.ToString())
+                .AppendFormat("<tr><td>{0}</td><td>{1}</td></tr>", "AvailableWorkerThreads", availableWorkerThreads.ToString())
+                .AppendFormat("<tr><td>{0}</td><td>{1}</td></tr>", "AvailableCompletionPortThreads", availableCompletionPortThreads.ToString())
+                .Append("</table>")
+                .Append("<br />")
+                .ToString();
+        }
+
+        private string GetHttpTunnelInfo()
+        {
+            return HttpTunnelNode.Instance.ToString();
         }
 
         #endregion
