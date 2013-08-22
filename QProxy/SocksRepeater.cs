@@ -27,7 +27,7 @@ namespace Q.Proxy
 
         private void Transfer(Stream src, Stream dest)
         {
-            byte[] buffer = new byte[4096];
+            byte[] buffer = new byte[BUFFER_LENGTH];
             for (int len = src.Read(buffer, 0, buffer.Length); len > 0; len = src.Read(buffer, 0, buffer.Length))
             {
                 dest.Write(buffer, 0, len);
@@ -53,8 +53,8 @@ namespace Q.Proxy
             //remoteStream = new NetworkStream(socket, true);
 
             remoteStream = new HttpTunnelStream(
-                "http://localhost:1008/tunnel",
-                //"https://tunnel.apphb.com/tunnel",
+                //"http://localhost:1008/tunnel",
+                "https://tunnel.apphb.com/tunnel",
                 host,
                 port
                 , null);// new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8888));

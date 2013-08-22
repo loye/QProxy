@@ -62,13 +62,11 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="HttpTunnelHandler.cs" />
-    <Compile Include="HttpTunnelModule.cs" />
     <Compile Include="HttpTunnelNode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Global.asax" />
-    <Content Include="sysinfo.aspx" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>

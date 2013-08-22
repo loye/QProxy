@@ -5,7 +5,7 @@ namespace Q.Net
 {
     public class HttpPackage
     {
-        public const int BUFFER_LENGTH = 4096;
+        private const int BUFFER_LENGTH = 4096;
 
         public HttpHeader HttpHeader { get; private set; }
 

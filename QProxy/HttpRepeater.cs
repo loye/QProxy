@@ -43,7 +43,7 @@ namespace Q.Proxy
 
         private void Transfer(ref Stream src, ref Stream dest, bool transparent = false, Action<bool> startRemoteTransfer = null)
         {
-            byte[] buffer = new byte[4096];
+            byte[] buffer = new byte[BUFFER_LENGTH];
             for (int pkgCount = 0; pkgCount < Int32.MaxValue; pkgCount++)
             {
                 if (transparent)

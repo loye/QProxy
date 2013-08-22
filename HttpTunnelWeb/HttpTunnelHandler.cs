@@ -3,13 +3,14 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading.Tasks;
 using System.Web;
 
 namespace Q.Net.Web
 {
     public class HttpTunnelHandler : IHttpHandler
     {
+        private const int BUFFER_LENGTH = 4096;
+
         #region IHttpHandler Members
 
         public bool IsReusable
@@ -38,31 +39,28 @@ namespace Q.Net.Web
         {
             var request = context.Request;
             var response = context.Response;
-            string action = request["action"] ?? String.Empty;
-
-            switch (action.ToLower())
-            {
-                default:
-                    response.Write("It's working!");
-                    break;
-            }
-            response.End();
+            response.Write("It's working!");
         }
 
         /// <summary>
-        /// Q-ID, Q-Action
-        ///     "CONNECT": Q-Host ,[Q-IP], Q-Port
-        ///     "WRITE": 
-        ///     "READ": [Q-Length]
-        ///     "CLOSE": 
+        /// RequestHeaders:
+        ///     Q-ID
+        ///     Q-Action:
+        ///         "CONNECT": Q-Host, Q-Port ,[Q-IP]
+        ///         "WRITE": 
+        ///         "READ": [Q-Length]
+        ///         "CLOSE": 
+        /// ResponseHeaders:
+        ///     Q-Action
+        ///     Q-Message
         /// </summary>
         private void POST(HttpContext context)
         {
             var request = context.Request;
             var response = context.Response;
+            string debugMessage = null;
             string id = request.Headers["Q-ID"];
             string action = (request.Headers["Q-Action"] ?? String.Empty).ToLower();
-            response.Headers["Q-Action"] = action;
             try
             {
                 switch (action)
@@ -72,11 +70,12 @@ namespace Q.Net.Web
                             string host = request.Headers["Q-Host"];
                             string ip = request.Headers["Q-IP"];
                             int port = int.Parse(request.Headers["Q-Port"]);
+
                             IPAddress ipAdd = !String.IsNullOrEmpty(ip) ? IPAddress.Parse(ip) : Dns.GetHostAddresses(host).Where(a => a.AddressFamily == AddressFamily.InterNetwork).First();
                             IPEndPoint endPoint = new IPEndPoint(ipAdd, port);
                             HttpTunnelNode.Instance.Connect(id, host, endPoint);
 
-                            response.Headers["Q-Message"] = String.Format("CONNECT: {0} [{1}]", host, endPoint);
+                            debugMessage = String.Format("CONNECT: {0} [{1}]", host, endPoint);
                         }
                         break;
 
@@ -85,47 +84,48 @@ namespace Q.Net.Web
                             int length = 0;
                             using (Stream inputStream = request.InputStream)
                             {
-                                byte[] buffer = new byte[4096];
+                                byte[] buffer = new byte[BUFFER_LENGTH];
                                 for (int len = inputStream.Read(buffer, 0, buffer.Length); len > 0; len = inputStream.Read(buffer, 0, buffer.Length))
                                 {
                                     HttpTunnelNode.Instance.Write(id, buffer, 0, len);
                                     length += len;
                                 }
                             }
-                            response.Headers["Q-Message"] = String.Format("WRITE: {0}", length);
+                            debugMessage = String.Format("WRITE: {0}", length);
                         }
                         break;
 
                     case "read":
                         {
-                            int len = 0;
+                            string lenghStr = request.Headers["Q-Length"];
+                            int length = 0;
                             using (Stream outputStream = response.OutputStream)
                             {
-                                int length;
-                                byte[] buffer = new byte[int.TryParse(request.Headers["Q-Length"], out length) ? length : 4096];
-                                len = HttpTunnelNode.Instance.Read(id, buffer, 0, buffer.Length);
-                                if (len > 0)
+                                int len;
+                                byte[] buffer = new byte[int.TryParse(lenghStr, out len) ? len : BUFFER_LENGTH];
+                                length = HttpTunnelNode.Instance.Read(id, buffer, 0, buffer.Length);
+                                if (length > 0)
                                 {
-                                    outputStream.Write(buffer, 0, len);
+                                    outputStream.Write(buffer, 0, length);
                                 }
                                 else
                                 {
                                     HttpTunnelNode.Instance.Close(id);
                                 }
                             }
-                            response.Headers["Q-Message"] = String.Format("READ: {0}", len);
+                            debugMessage = String.Format("READ: {0}", length);
                         }
                         break;
 
                     case "close":
                         {
                             HttpTunnelNode.Instance.Close(id);
-                            response.Headers["Q-Message"] = "CLOSE";
+                            debugMessage = "CLOSE";
                         }
                         break;
                     case "debug":
                         {
-                            response.Headers["Q-Message"] = "Debug";
+                            debugMessage = "Debug";
                         }
                         break;
                     default:
@@ -137,9 +137,11 @@ namespace Q.Net.Web
                 HttpTunnelNode.Instance.Close(id);
                 response.Clear();
                 response.Headers["Q-Exception"] = e.GetType().Name;
-                response.Headers["Q-Message"] = "Exception";
+                debugMessage = "Exception";
                 response.Write(e.Message);
             }
+            response.Headers["Q-Message"] = debugMessage;
+            response.Headers["Q-Action"] = action;
             response.End();
         }
     }

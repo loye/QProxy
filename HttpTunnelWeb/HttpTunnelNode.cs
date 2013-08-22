@@ -66,12 +66,12 @@ namespace Q.Net.Web
         {
             Task.Run(() =>
             {
+                int timeout;
+                TimeSpan timeoutSpan = new TimeSpan(0, 0, Int32.TryParse(ConfigurationManager.AppSettings["TunnelTimeout"], out timeout) ? timeout : 600);
                 while (true)
                 {
                     try
                     {
-                        int timeout;
-                        TimeSpan timeoutSpan = new TimeSpan(0, 0, Int32.TryParse(ConfigurationManager.AppSettings["TunnelTimeout"], out timeout) ? timeout : 900);
                         Thread.Sleep(cycle * 1000);
                         foreach (var item in tunnelPool)
                         {
