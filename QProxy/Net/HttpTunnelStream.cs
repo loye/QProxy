@@ -22,20 +22,32 @@ namespace Q.Net
 
         public Stream ReadStream { get; private set; }
 
+        public bool Encrypted { get; private set; }
 
-        public HttpTunnelStream(string handler, string destHost, int destPort, IPEndPoint proxy = null)
+        public SimpleEncryptionProvider Encryptor { get; private set; }
+
+        public HttpTunnelStream(string handler, string destHost, int destPort, bool encrypted, IPEndPoint proxy = null)
         {
             this.ID = Guid.NewGuid().ToString("N");
             this.HandlerUri = new Uri(handler);
             this.Proxy = proxy;
             this.DestHost = destHost;
             this.DestPort = destPort;
+            this.Encrypted = encrypted;
             this.WriteStream = this.Connect();
             this.ReadStream = this.Connect();
+            if (encrypted)
+            {
+                this.Encryptor = new SimpleEncryptionProvider(destHost);
+            }
 
             var httpHeader = this.NewRequestHeader(HttpHeaderCustomValue.Action.Connect);
             httpHeader[HttpHeaderCustomKey.Host] = this.DestHost;
             httpHeader[HttpHeaderCustomKey.Port] = this.DestPort;
+            if (this.Encrypted)
+            {
+                httpHeader[HttpHeaderCustomKey.Encrypted] = this.Encrypted;
+            }
             this.WriteStream.Write(httpHeader.ToBinary(), 0, httpHeader.Length);
 
             HttpPackage package = RecievePackage(this.WriteStream);
@@ -44,32 +56,37 @@ namespace Q.Net
         public override int Read(byte[] buffer, int offset, int count)
         {
             int lenght = 0;
-            if (this.ReadStream == null)
-            {
-                Console.WriteLine("null");
-                this.ReadStream = this.Connect();
-            }
             var httpHeader = this.NewRequestHeader(HttpHeaderCustomValue.Action.Read);
             httpHeader[HttpHeaderCustomKey.Length] = count;
             this.ReadStream.Write(httpHeader.ToBinary(), 0, httpHeader.Length);
             HttpPackage package = RecievePackage(this.ReadStream);
             byte[] bin = package.HttpContent.ToBinary();
             lenght = bin.Length;
+            if (this.Encrypted)
+            {
+                this.Encryptor.Decrypt(bin, 0, bin.Length);
+            }
             Array.Copy(bin, 0, buffer, offset, lenght);
             return lenght;
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            if (this.WriteStream == null)
-            {
-                Console.WriteLine("null");
-                this.WriteStream = this.Connect();
-            }
             var httpHeader = this.NewRequestHeader(HttpHeaderCustomValue.Action.Write);
             httpHeader.ContentLength = count;
             this.WriteStream.Write(httpHeader.ToBinary(), 0, httpHeader.Length);
-            this.WriteStream.Write(buffer, offset, count);
+            byte[] buf = buffer;
+            if (this.Encrypted && count > 0)
+            {
+                buf = new byte[count];
+                Array.Copy(buffer, offset, buf, 0, count);
+                this.Encryptor.Encrypt(buf, 0, count);
+                this.WriteStream.Write(buf, 0, count);
+            }
+            else
+            {
+                this.WriteStream.Write(buffer, offset, count);
+            }
             HttpPackage package = RecievePackage(this.WriteStream);
         }
 
@@ -107,6 +124,7 @@ namespace Q.Net
             {
                 throw new Exception(String.Format("Remote Expection: [{0}]\r\n{1}", package.HttpHeader[HttpHeaderCustomKey.Exception].ToString().Trim(), package.HttpContent.ToString()));
             }
+            //Console.WriteLine(package.HttpHeader[HttpHeaderCustomKey.Message]);
             return package;
         }
 

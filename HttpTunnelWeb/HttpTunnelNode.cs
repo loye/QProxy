@@ -12,7 +12,7 @@ namespace Q.Net.Web
 {
     public class HttpTunnelNode
     {
-        private static ConcurrentDictionary<string, Tunnel> tunnelPool = new ConcurrentDictionary<string, Tunnel>();
+        private ConcurrentDictionary<string, Tunnel> tunnelPool = new ConcurrentDictionary<string, Tunnel>();
 
         private static HttpTunnelNode m_instance;
 
@@ -38,19 +38,30 @@ namespace Q.Net.Web
             }
         }
 
-        public void Connect(string id, string host, IPEndPoint endPoint)
+        public void Connect(string id, string host, IPEndPoint endPoint, bool encrypted)
         {
-            tunnelPool.TryAdd(id, new Tunnel(id, host, endPoint));
+            tunnelPool.TryAdd(id, new Tunnel(id, host, endPoint, encrypted));
         }
 
-        public void Write(string id, byte[] buffer, int offset, int count)
+        public void Write(string id, byte[] buffer, int offset, int count, int totalLength)
         {
-            tunnelPool[id].Stream.Write(buffer, offset, count);
+            Tunnel tunnel = tunnelPool[id];
+            if (tunnel.Encrypted)
+            {
+                tunnel.Encryptor.Decrypt(buffer, offset, count, totalLength);
+            }
+            tunnel.Stream.Write(buffer, offset, count);
         }
 
         public int Read(string id, byte[] buffer, int offset, int count)
         {
-            return tunnelPool[id].Stream.Read(buffer, offset, count);
+            Tunnel tunnel = tunnelPool[id];
+            int len = tunnel.Stream.Read(buffer, offset, count);
+            if (tunnel.Encrypted)
+            {
+                tunnel.Encryptor.Encrypt(buffer, offset, len);
+            }
+            return len;
         }
 
         public void Close(string id)
@@ -113,6 +124,10 @@ namespace Q.Net.Web
 
             public DateTime LastActivityTime { get; private set; }
 
+            public bool Encrypted { get; private set; }
+
+            public SimpleEncryptionProvider Encryptor { get; private set; }
+
             public Stream Stream
             {
                 get
@@ -124,11 +139,16 @@ namespace Q.Net.Web
 
             private Stream m_stream;
 
-            public Tunnel(string id, string host, IPEndPoint endPoint)
+            public Tunnel(string id, string host, IPEndPoint endPoint, bool encrypted)
             {
                 this.ID = id;
                 this.Host = host;
                 this.IPEndPoint = endPoint;
+                this.Encrypted = encrypted;
+                if (encrypted)
+                {
+                    this.Encryptor = new SimpleEncryptionProvider(host);
+                }
                 Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 socket.Connect(endPoint);
                 m_stream = new NetworkStream(socket, true);

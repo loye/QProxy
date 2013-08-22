@@ -74,7 +74,6 @@ namespace Q.Proxy
                 var clientSocket = this.m_ListenSocket.Accept();
                 Task.Run(() =>
                 {
-                    Console.WriteLine(String.Format("Accept: {0}", clientSocket.RemoteEndPoint));
                     using (Stream netStream = new NetworkStream(clientSocket, true))
                     {
                         try

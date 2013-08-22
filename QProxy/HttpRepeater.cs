@@ -111,15 +111,7 @@ namespace Q.Proxy
 
         private Stream Connect(ref Stream localStream, Q.Net.HttpRequestHeader requestHeader)
         {
-            //IPEndPoint endPoint = this.Proxy ?? new IPEndPoint(DnsHelper.GetHostAddress(requestHeader.Host), requestHeader.Port);
-            //Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            //socket.Connect(endPoint);
-            //Stream remoteStream = new NetworkStream(socket, true);
-
-            Stream remoteStream = new HttpTunnelStream(
-                "http://localhost:1008/tunnel",
-                //"https://tunnel.apphb.com/tunnel",
-                requestHeader.Host, requestHeader.Port, null);
+            Stream remoteStream = GetRemoteStream(requestHeader.Host, requestHeader.Port);
 
             if (requestHeader.HttpMethod == HttpMethod.Connect)
             {

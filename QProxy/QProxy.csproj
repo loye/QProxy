@@ -44,7 +44,7 @@
     <Compile Include="Net\_Constants.cs" />
     <Compile Include="Q\CAHelper.cs" />
     <Compile Include="Net\DnsHelper.cs" />
-    <Compile Include="EncryptionProvider.cs" />
+    <Compile Include="Q\SimpleEncryptionProvider.cs" />
     <Compile Include="HttpRepeater.cs" />
     <Compile Include="Net\Http\HttpContent.cs" />
     <Compile Include="Net\Http\HttpHeader.cs" />

@@ -68,14 +68,12 @@ namespace Q.Net.Web
                     case "connect":
                         {
                             string host = request.Headers["Q-Host"];
-                            string ip = request.Headers["Q-IP"];
                             int port = int.Parse(request.Headers["Q-Port"]);
+                            IPAddress ip = IPAddress.TryParse(request.Headers["Q-IP"], out ip) ? ip : Dns.GetHostAddresses(host).Where(a => a.AddressFamily == AddressFamily.InterNetwork).First();
+                            bool encrypted = bool.TryParse(request.Headers["Q-Encrypted"], out encrypted) ? encrypted : false;
+                            HttpTunnelNode.Instance.Connect(id, host, new IPEndPoint(ip, port), encrypted);
 
-                            IPAddress ipAdd = !String.IsNullOrEmpty(ip) ? IPAddress.Parse(ip) : Dns.GetHostAddresses(host).Where(a => a.AddressFamily == AddressFamily.InterNetwork).First();
-                            IPEndPoint endPoint = new IPEndPoint(ipAdd, port);
-                            HttpTunnelNode.Instance.Connect(id, host, endPoint);
-
-                            debugMessage = String.Format("CONNECT: {0} [{1}]", host, endPoint);
+                            debugMessage = String.Format("CONNECT: {0} [{1}:{2}]", host, ip, port);
                         }
                         break;
 
@@ -87,7 +85,7 @@ namespace Q.Net.Web
                                 byte[] buffer = new byte[BUFFER_LENGTH];
                                 for (int len = inputStream.Read(buffer, 0, buffer.Length); len > 0; len = inputStream.Read(buffer, 0, buffer.Length))
                                 {
-                                    HttpTunnelNode.Instance.Write(id, buffer, 0, len);
+                                    HttpTunnelNode.Instance.Write(id, buffer, 0, len, length);
                                     length += len;
                                 }
                             }
@@ -97,12 +95,11 @@ namespace Q.Net.Web
 
                     case "read":
                         {
-                            string lenghStr = request.Headers["Q-Length"];
+                            int bufLength = int.TryParse(request.Headers["Q-Length"], out bufLength) ? bufLength : BUFFER_LENGTH;
                             int length = 0;
                             using (Stream outputStream = response.OutputStream)
                             {
-                                int len;
-                                byte[] buffer = new byte[int.TryParse(lenghStr, out len) ? len : BUFFER_LENGTH];
+                                byte[] buffer = new byte[bufLength];
                                 length = HttpTunnelNode.Instance.Read(id, buffer, 0, buffer.Length);
                                 if (length > 0)
                                 {
@@ -139,6 +136,8 @@ namespace Q.Net.Web
                 response.Headers["Q-Exception"] = e.GetType().Name;
                 debugMessage = "Exception";
                 response.Write(e.Message);
+                response.Write(e.Source);
+                response.Write(e.StackTrace);
             }
             response.Headers["Q-Message"] = debugMessage;
             response.Headers["Q-Action"] = action;
