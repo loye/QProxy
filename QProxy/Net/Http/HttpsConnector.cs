@@ -10,27 +10,11 @@ namespace Q.Net
 {
     public class HttpsConnector
     {
-        private static HttpsConnector m_instance;
-
-        private static object locker = new object();
-
-        private HttpsConnector() { }
-
         public static HttpsConnector Instance
         {
             get
             {
-                if (m_instance == null)
-                {
-                    lock (locker)
-                    {
-                        if (m_instance == null)
-                        {
-                            m_instance = new HttpsConnector();
-                        }
-                    }
-                }
-                return m_instance;
+                return SingletonProvider<HttpsConnector>.Instance;
             }
         }
 

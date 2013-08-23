@@ -17,9 +17,7 @@ namespace CMDStarter
     {
         static void Main(string[] args)
         {
-            new Listener("127.0.0.1", 2000).Start();
-            //new Listener("127.0.0.1", 1000).Start();
-
+            new QProxy().Start();
 
             while (true)
             {

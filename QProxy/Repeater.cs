@@ -25,8 +25,8 @@ namespace Q.Proxy
             //return new NetworkStream(socket, true);
 
             return new HttpTunnelStream(
-                "http://localhost:1008/tunnel",
-                //"https://tunnel.apphb.com/tunnel",
+                //"http://localhost:1008/tunnel",
+                "https://tunnel.apphb.com/tunnel",
                 host,
                 port,
                 false);

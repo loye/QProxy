@@ -19,27 +19,11 @@ namespace Q.Net
     /// </summary>
     public class SocksConnector
     {
-        private static SocksConnector m_instance;
-
-        private static object locker = new object();
-
-        private SocksConnector() { }
-
         public static SocksConnector Instance
         {
             get
             {
-                if (m_instance == null)
-                {
-                    lock (locker)
-                    {
-                        if (m_instance == null)
-                        {
-                            m_instance = new SocksConnector();
-                        }
-                    }
-                }
-                return m_instance;
+                return SingletonProvider<SocksConnector>.Instance;
             }
         }
 

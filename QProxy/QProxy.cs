@@ -3,16 +3,28 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Q.Proxy.Configuration;
+using Q.Configuration;
+using Q.Proxy.Debug;
 
 namespace Q.Proxy
 {
     public class QProxy
     {
-        public configuration ConfigurationContext { get; set; }
+        public QProxy()
+        {
+
+
+            Logger.Instance = new ConsoleLogger();
+        }
 
         public void Start()
         {
+            foreach (var item in ConfigurationManager.Current.listeners)
+            {
+
+            }
+
+            new Listener<SocksRepeater>("127.0.0.1", 2000).Start();
 
         }
 

@@ -45,7 +45,7 @@
     <Compile Include="Configuration\ConfigurationManager.cs" />
     <Compile Include="Debug\Logger.cs" />
     <Compile Include="Debug\MultiLogger.cs" />
-    <Compile Include="Net\HttpTunnelStream.cs" />
+    <Compile Include="HttpTunnelStream.cs" />
     <Compile Include="Net\Socks\SocksConnector.cs" />
     <Compile Include="Net\_Constants.cs" />
     <Compile Include="QProxy.cs" />
@@ -63,6 +63,7 @@
     <Compile Include="Listener.cs" />
     <Compile Include="Q\Extenstions.cs" />
     <Compile Include="Debug\ConsoleLogger.cs" />
+    <Compile Include="Q\SingletonProvider.cs" />
     <Compile Include="Repeater.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Net\Http\_Constants.cs" />

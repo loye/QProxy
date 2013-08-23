@@ -5,10 +5,11 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Q.Proxy.Debug;
 
 namespace Q.Proxy
 {
-    public class Listener
+    public class Listener<T> where T : Repeater, new()
     {
         private Socket m_ListenSocket;
 
@@ -26,12 +27,11 @@ namespace Q.Proxy
         {
             this.m_ListenSocket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             this.m_ListenSocket.Bind(endPoint);
-            //m_repeater = new HttpRepeater();
-            m_repeater = new SocksRepeater();
+            m_repeater = new T();
             ThreadPool.SetMinThreads(1000, 1000);
         }
 
-        public Listener Start()
+        public Listener<T> Start()
         {
             this.m_ListenSocket.Listen(500);
 
@@ -43,7 +43,7 @@ namespace Q.Proxy
             return this;
         }
 
-        public Listener Stop()
+        public Listener<T> Stop()
         {
             throw new NotImplementedException();
             //this.Started = false;
@@ -82,7 +82,7 @@ namespace Q.Proxy
                         }
                         catch (Exception ex)
                         {
-                            ConsoleLogger.PublishException(ex);
+                            Logger.Instance.PublishException(ex);
                         }
                     }
                 });

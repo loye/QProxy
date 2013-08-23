@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
+using Q.Configuration;
 
 namespace Q
 {
@@ -14,7 +15,7 @@ namespace Q
         private const string MAKE_CERT_SUBJECT = "CN={0}, OU=Loye";
         private const string MAKE_CERT_ROOT_DOMAIN = "QProxy";
 
-        private static readonly string MAKECERT_FILENAME = @".\makecert.exe"; //TODO
+        private static readonly string MAKECERT_FILENAME = @".\makecert.exe";
         private static readonly ConcurrentDictionary<string, X509Certificate2> certificateCache = new ConcurrentDictionary<string, X509Certificate2>();
         private static X509Certificate2 rootCert;
         private static readonly ReaderWriterLockSlim caRWLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);

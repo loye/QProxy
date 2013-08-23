@@ -1,18 +1,21 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="Q.Proxy.Configuration" xmlns="Q.Proxy.Configuration" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="Q.Configuration" xmlns="Q.Configuration" xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <xs:element name="configuration">
     <xs:complexType>
       <xs:sequence>
-        <xs:element name="listeners" type="listeners" maxOccurs="1"/>
+        <xs:element name="listeners" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element maxOccurs="unbounded" name="listener" type="listener">
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="cahelper" type="cahelper" />
       </xs:sequence>
     </xs:complexType>
   </xs:element>
-  <xs:complexType name="listeners">
-    <xs:sequence>
-      <xs:element maxOccurs="unbounded" name="listener" type="listener">
-      </xs:element>
-    </xs:sequence>
-  </xs:complexType>
+
   <xs:complexType name="listener">
     <xs:sequence>
       <xs:element name="tunnel" type="tunnel" />
@@ -21,6 +24,7 @@
     <xs:attribute name="type" type="proxyType" use="required" />
     <xs:attribute name="host" type="xs:string" use="required" />
     <xs:attribute name="port" type="xs:unsignedShort" use="required" />
+    <xs:attribute name="decryptSSL" type="xs:boolean" use="optional" />
   </xs:complexType>
   <xs:complexType name="tunnel">
     <xs:attribute name="type" type="tunnelType" use="required" />
@@ -44,4 +48,16 @@
       <xs:enumeration value="http"></xs:enumeration>
     </xs:restriction>
   </xs:simpleType>
+
+  <xs:complexType name="cahelper">
+    <xs:sequence>
+      <xs:element name="makecert" type="makecert" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="makecert">
+    <xs:attribute name="path" type="xs:string" use="required" />
+    <xs:attribute name="downloadUrl" type="xs:string" use="optional" />
+  </xs:complexType>
+
+
 </xs:schema>

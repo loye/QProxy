@@ -2,9 +2,9 @@
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
+using Q.Net;
 
-namespace Q.Net
+namespace Q.Proxy
 {
     public class HttpTunnelStream : Stream
     {

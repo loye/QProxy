@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
-<configuration xmlns="QProxy.config.xml">
+<configuration xmlns="Q.Configuration">
   <listeners>
     <listener type="socks" host="127.0.0.1" port="2000">
       <tunnel type="local" />
