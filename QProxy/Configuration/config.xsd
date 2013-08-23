@@ -1,12 +1,47 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<xs:schema
-    targetNamespace="http://tempuri.org/config.xsd"
-    elementFormDefault="qualified"
-    xmlns="http://tempuri.org/config.xsd"
-    xmlns:mstns="http://tempuri.org/config.xsd"
-    xmlns:xs="http://www.w3.org/2001/XMLSchema"
->
-  <xs:complexType name="Proxy">
-
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="Q.Proxy.Configuration" xmlns="Q.Proxy.Configuration" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="configuration">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="listeners" type="listeners" maxOccurs="1"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:complexType name="listeners">
+    <xs:sequence>
+      <xs:element maxOccurs="unbounded" name="listener" type="listener">
+      </xs:element>
+    </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="listener">
+    <xs:sequence>
+      <xs:element name="tunnel" type="tunnel" />
+      <xs:element name="proxy" type="proxy" />
+    </xs:sequence>
+    <xs:attribute name="type" type="proxyType" use="required" />
+    <xs:attribute name="host" type="xs:string" use="required" />
+    <xs:attribute name="port" type="xs:unsignedShort" use="required" />
+  </xs:complexType>
+  <xs:complexType name="tunnel">
+    <xs:attribute name="type" type="tunnelType" use="required" />
+    <xs:attribute name="url" type="xs:string" use="optional" />
+    <xs:attribute name="encrypted" type="xs:boolean" use="optional" />
+  </xs:complexType>
+  <xs:complexType name="proxy">
+    <xs:attribute name="type" type="proxyType" use="required" />
+    <xs:attribute name="host" type="xs:string" use="required" />
+    <xs:attribute name="port" type="xs:unsignedShort" use="required" />
+  </xs:complexType>
+  <xs:simpleType name="proxyType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="socks"></xs:enumeration>
+      <xs:enumeration value="http"></xs:enumeration>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="tunnelType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="local"></xs:enumeration>
+      <xs:enumeration value="http"></xs:enumeration>
+    </xs:restriction>
+  </xs:simpleType>
 </xs:schema>

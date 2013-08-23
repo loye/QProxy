@@ -29,7 +29,7 @@ namespace Q.Proxy
                 //"https://tunnel.apphb.com/tunnel",
                 host,
                 port,
-                true);
+                false);
         }
     }
 }

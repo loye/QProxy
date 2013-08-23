@@ -86,7 +86,7 @@ namespace Q.Net.Web
                         Thread.Sleep(cycle * 1000);
                         foreach (var item in tunnelPool)
                         {
-                            if (DateTime.Now - item.Value.LastActivityTime > timeoutSpan)
+                            if (item.Value.IdelTime > timeoutSpan)
                             {
                                 this.Close(item.Value.ID);
                             }
@@ -104,7 +104,7 @@ namespace Q.Net.Web
             StringBuilder sb = new StringBuilder();
             int count = 0;
             sb.AppendLine("<table>");
-            sb.AppendLine("<tr><td>ID</td><td>Host</td><td>IPEndPoint</td><td>LastActivityTime</td></tr>");
+            sb.AppendLine("<tr><td>ID</td><td>Host</td><td>IPEndPoint</td><td>IdelTime(sec)</td></tr>");
             foreach (var item in tunnelPool)
             {
                 count++;
@@ -137,6 +137,14 @@ namespace Q.Net.Web
                 }
             }
 
+            public TimeSpan IdelTime
+            {
+                get
+                {
+                    return DateTime.Now - this.LastActivityTime;
+                }
+            }
+
             private Stream m_stream;
 
             public Tunnel(string id, string host, IPEndPoint endPoint, bool encrypted)
@@ -157,7 +165,7 @@ namespace Q.Net.Web
 
             public override string ToString()
             {
-                return String.Format("<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td></tr>", this.ID, this.Host, this.IPEndPoint, this.LastActivityTime);
+                return String.Format("<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td></tr>", this.ID, this.Host, this.IPEndPoint, (int)this.IdelTime.TotalSeconds);
             }
 
             public void Dispose()

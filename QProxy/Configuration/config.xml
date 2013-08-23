@@ -1,5 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
-<configuration>
-
+<configuration xmlns="QProxy.config.xml">
+  <listeners>
+    <listener type="socks" host="127.0.0.1" port="2000">
+      <tunnel type="local" />
+      <proxy type="http" host="127.0.0.1" port="1000"/>
+    </listener>
+    <listener type="http" host="127.0.0.1" port="1000" decryptSSL="false">
+      <tunnel type="http" url="http://localhost:1008/tunnel" encrypted="false" />
+      <proxy type="socks" host="127.0.0.1" port="2001"/>
+    </listener>
+  </listeners>
+  <cahelper>
+    <makecert path=".\makecert.exe" downloadUrl="http://localhost:1008/makecert"></makecert>
+  </cahelper>
 </configuration>
 

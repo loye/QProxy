@@ -3,7 +3,7 @@ using System.Net.Sockets;
 
 namespace Q
 {
-    internal static class Logger
+    internal static class ConsoleLogger
     {
         private static readonly object consoleLocker = new object();
 

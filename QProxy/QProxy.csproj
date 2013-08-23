@@ -39,9 +39,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\config.cs">
+      <DependentUpon>config.xsd</DependentUpon>
+    </Compile>
+    <Compile Include="Configuration\ConfigurationManager.cs" />
+    <Compile Include="Debug\Logger.cs" />
+    <Compile Include="Debug\MultiLogger.cs" />
     <Compile Include="Net\HttpTunnelStream.cs" />
     <Compile Include="Net\Socks\SocksConnector.cs" />
     <Compile Include="Net\_Constants.cs" />
+    <Compile Include="QProxy.cs" />
     <Compile Include="Q\CAHelper.cs" />
     <Compile Include="Net\DnsHelper.cs" />
     <Compile Include="Q\SimpleEncryptionProvider.cs" />
@@ -55,7 +62,7 @@
     <Compile Include="Net\Http\HttpsConnector.cs" />
     <Compile Include="Listener.cs" />
     <Compile Include="Q\Extenstions.cs" />
-    <Compile Include="Q\Logger.cs" />
+    <Compile Include="Debug\ConsoleLogger.cs" />
     <Compile Include="Repeater.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Net\Http\_Constants.cs" />
