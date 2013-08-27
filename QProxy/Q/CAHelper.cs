@@ -15,10 +15,19 @@ namespace Q
         private const string MAKE_CERT_SUBJECT = "CN={0}, OU=Loye";
         private const string MAKE_CERT_ROOT_DOMAIN = "QProxy";
 
-        private static readonly string MAKECERT_FILENAME = @".\makecert.exe";
+        private static readonly string MAKECERT_FILEPATH = @".\makecert.exe";
         private static readonly ConcurrentDictionary<string, X509Certificate2> certificateCache = new ConcurrentDictionary<string, X509Certificate2>();
         private static X509Certificate2 rootCert;
         private static readonly ReaderWriterLockSlim caRWLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+
+        static CAHelper()
+        {
+            var cahelper = ConfigurationManager.Current.cahelper ?? ConfigurationManager.Default.cahelper;
+            if (cahelper != null && cahelper.makecert != null && !String.IsNullOrWhiteSpace(cahelper.makecert.path))
+            {
+                MAKECERT_FILEPATH = cahelper.makecert.path;
+            }
+        }
 
         public static X509Certificate2 GetCertificate(string host)
         {
@@ -73,7 +82,7 @@ namespace Q
 
         private static X509Certificate2 CreateCertificate(string host, bool isRoot = false)
         {
-            if (String.IsNullOrEmpty(MAKECERT_FILENAME) || !File.Exists(MAKECERT_FILENAME))
+            if (String.IsNullOrEmpty(MAKECERT_FILEPATH) || !File.Exists(MAKECERT_FILEPATH))
             {
                 throw new Exception("Create Certification: Failed. Can't find makecert.exe");
             }
@@ -94,7 +103,7 @@ namespace Q
                 }
             }
             int exitCode = 999;
-            string execute = MAKECERT_FILENAME;
+            string execute = MAKECERT_FILEPATH;
             string parameters = isRoot ? MAKE_CERT_PARAMS_ROOT : String.Format(MAKE_CERT_PARAMS_END, host);
             try
             {

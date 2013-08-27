@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using Q.Configuration;
 using Q.Net;
 
 namespace Q.Proxy
@@ -12,10 +13,10 @@ namespace Q.Proxy
     {
         public bool DecryptSSL { get; set; }
 
-        public HttpRepeater()
-            : base()
+        public HttpRepeater(listener listenerConfig)
+            : base(listenerConfig)
         {
-            this.DecryptSSL = false;
+            this.DecryptSSL = listenerConfig.decryptSSL;
         }
 
         public override void Relay(Stream localStream)
@@ -111,7 +112,7 @@ namespace Q.Proxy
 
         private Stream Connect(ref Stream localStream, Q.Net.HttpRequestHeader requestHeader)
         {
-            Stream remoteStream = GetRemoteStream(requestHeader.Host, requestHeader.Port);
+            Stream remoteStream = GetStream(requestHeader.Host, requestHeader.Port);
 
             if (requestHeader.HttpMethod == HttpMethod.Connect)
             {

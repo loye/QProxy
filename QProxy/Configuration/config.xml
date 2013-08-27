@@ -2,16 +2,19 @@
 <configuration xmlns="Q.Configuration">
   <listeners>
     <listener type="socks" host="127.0.0.1" port="2000">
-      <tunnel type="local" />
-      <proxy type="http" host="127.0.0.1" port="1000"/>
     </listener>
     <listener type="http" host="127.0.0.1" port="1000" decryptSSL="false">
       <tunnel type="http" url="http://localhost:1008/tunnel" encrypted="false" />
-      <proxy type="socks" host="127.0.0.1" port="2001"/>
+      <!--<proxy type="socks" host="127.0.0.1" port="2001"/>-->
     </listener>
   </listeners>
   <cahelper>
-    <makecert path=".\makecert.exe" downloadUrl="http://localhost:1008/makecert"></makecert>
+    <makecert path=".\makecert.exe"></makecert>
   </cahelper>
+  <dnshelper>
+    <static>
+      <a host="localhost" ip="127.0.0.1" />
+      <a host="xxx" ip="127.0.0.1" />
+    </static>
+  </dnshelper>
 </configuration>
-

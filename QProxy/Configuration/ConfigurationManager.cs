@@ -43,11 +43,10 @@ namespace Q.Configuration
                 return new configuration()
                 {
                     listeners = new listener[] { new listener() { host = "0.0.0.0", port = 1080, type = proxyType.socks, tunnel = new tunnel() { type = tunnelType.local } } },
-                    cahelper = new cahelper() { makecert = new makecert() { path = @".\makecert.exe" } }
+                    cahelper = new cahelper() { makecert = new makecert() { path = @".\makecert.exe" } },
+                    dnshelper = new dnshelper() { @static = new staticA[] { new staticA() { host = "localhost", ip = "127.0.0.1" } } }
                 };
             }
         }
-
-
     }
 }

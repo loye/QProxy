@@ -2,12 +2,18 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using Q.Configuration;
 using Q.Net;
 
 namespace Q.Proxy
 {
     public class SocksRepeater : Repeater
     {
+        public SocksRepeater(listener listenerConfig)
+            : base(listenerConfig)
+        {
+        }
+
         public override void Relay(Stream localStream)
         {
             using (Stream remoteStream = Connect(ref localStream))
@@ -40,7 +46,7 @@ namespace Q.Proxy
             int port;
             IPAddress ip;
             SocksConnector.Instance.ConnectAsServer(localStream, out host, out port, out ip);
-            return GetRemoteStream(host ?? ip.ToString(), port);
+            return GetStream(host ?? ip.ToString(), port);
         }
     }
 }

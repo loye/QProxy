@@ -6,10 +6,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Q.Proxy.Debug;
+using Q.Configuration;
 
 namespace Q.Proxy
 {
-    public class Listener<T> where T : Repeater, new()
+    public class Listener
     {
         private Socket m_ListenSocket;
 
@@ -19,19 +20,19 @@ namespace Q.Proxy
 
         public bool Started { get; private set; }
 
-        public Listener(string ip, int port)
-            : this(new IPEndPoint(IPAddress.Parse(ip), port))
+        public Listener(string ip, int port, Repeater repeater)
+            : this(new IPEndPoint(IPAddress.Parse(ip), port), repeater)
         { }
 
-        public Listener(IPEndPoint endPoint)
+        public Listener(IPEndPoint endPoint, Repeater repeater)
         {
             this.m_ListenSocket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             this.m_ListenSocket.Bind(endPoint);
-            m_repeater = new T();
+            m_repeater = repeater;
             ThreadPool.SetMinThreads(1000, 1000);
         }
 
-        public Listener<T> Start()
+        public Listener Start()
         {
             this.m_ListenSocket.Listen(500);
 
@@ -43,7 +44,7 @@ namespace Q.Proxy
             return this;
         }
 
-        public Listener<T> Stop()
+        public Listener Stop()
         {
             throw new NotImplementedException();
             //this.Started = false;

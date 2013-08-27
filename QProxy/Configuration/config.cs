@@ -28,6 +28,8 @@ namespace Q.Configuration {
         
         private cahelper cahelperField;
         
+        private dnshelper dnshelperField;
+        
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable=false)]
         public listener[] listeners {
@@ -46,6 +48,16 @@ namespace Q.Configuration {
             }
             set {
                 this.cahelperField = value;
+            }
+        }
+        
+        /// <remarks/>
+        public dnshelper dnshelper {
+            get {
+                return this.dnshelperField;
+            }
+            set {
+                this.dnshelperField = value;
             }
         }
     }
@@ -220,6 +232,63 @@ namespace Q.Configuration {
         
         /// <remarks/>
         http,
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.17929")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="Q.Configuration")]
+    public partial class dnshelper {
+        
+        private staticA[] staticField;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlArrayItemAttribute("a", IsNullable=false)]
+        public staticA[] @static {
+            get {
+                return this.staticField;
+            }
+            set {
+                this.staticField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.17929")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="Q.Configuration")]
+    public partial class staticA {
+        
+        private string hostField;
+        
+        private string ipField;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string host {
+            get {
+                return this.hostField;
+            }
+            set {
+                this.hostField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string ip {
+            get {
+                return this.ipField;
+            }
+            set {
+                this.ipField = value;
+            }
+        }
     }
     
     /// <remarks/>

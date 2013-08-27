@@ -10,6 +10,8 @@ namespace Q.Proxy
 {
     public class QProxy
     {
+        private List<Listener> Listeners = new List<Listener>();
+
         public QProxy()
         {
 
@@ -19,12 +21,29 @@ namespace Q.Proxy
 
         public void Start()
         {
+
             foreach (var item in ConfigurationManager.Current.listeners)
             {
-
+                Repeater repeater;
+                switch (item.type)
+                {
+                    case proxyType.socks:
+                        repeater = new SocksRepeater(item);
+                        break;
+                    case proxyType.http:
+                        repeater = new HttpRepeater(item);
+                        break;
+                    default:
+                        repeater = new HttpRepeater(item);
+                        break;
+                }
+                this.Listeners.Add(new Listener(item.host, item.port, repeater));
             }
 
-            new Listener<SocksRepeater>("127.0.0.1", 2000).Start();
+            foreach (var item in Listeners)
+            {
+                item.Start();
+            }
 
         }
 

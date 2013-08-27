@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
+using Q.Configuration;
 
 namespace Q.Net
 {
@@ -11,17 +12,16 @@ namespace Q.Net
     {
         private static readonly Regex HOSTS_REGEX = new Regex(@"(?<ip>\d+\.\d+\.\d+\.\d+)[ \t]+(?<host>[^ \t\r\n]+)", RegexOptions.Compiled);
 
-        private static Dictionary<string, IPAddress> hosts = null;
+        private static Dictionary<string, IPAddress> hosts = new Dictionary<string, IPAddress>();
 
         static DnsHelper()
         {
-            hosts = new Dictionary<string, IPAddress>();
-            for (Match match = HOSTS_REGEX.Match("127.0.0.1 localhost"); match.Success; match = match.NextMatch()) // TODO
+            foreach (var item in ConfigurationManager.Current.dnshelper.@static)
             {
                 IPAddress ip;
-                if (IPAddress.TryParse(match.Groups["ip"].Value, out ip))
+                if (!String.IsNullOrWhiteSpace(item.host) && IPAddress.TryParse(item.ip, out ip))
                 {
-                    hosts[match.Groups["host"].Value] = ip;
+                    hosts.Add(item.host, ip);
                 }
             }
         }
