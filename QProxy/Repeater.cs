@@ -23,6 +23,13 @@ namespace Q.Proxy
 
         public abstract void Relay(Stream localStream);
 
+        public override string ToString()
+        {
+            return String.Format("{{ Type: {0}, Tunnel: {1} }}\r\n",
+                this.GetType().Name,
+                m_tunnel.type == tunnelType.http ? String.Format("http{{ url: {0}, encrypted: {1} }}", m_tunnel.url, m_tunnel.encrypted) : m_tunnel.type.ToString());
+        }
+
         protected Stream GetStream(string host, int port)
         {
             switch (m_tunnel.type)

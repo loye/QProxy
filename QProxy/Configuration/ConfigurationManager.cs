@@ -44,7 +44,7 @@ namespace Q.Configuration
                 {
                     listeners = new listener[] { new listener() { host = "0.0.0.0", port = 1080, type = proxyType.socks, tunnel = new tunnel() { type = tunnelType.local } } },
                     cahelper = new cahelper() { makecert = new makecert() { path = @".\makecert.exe" } },
-                    dnshelper = new dnshelper() { @static = new staticA[] { new staticA() { host = "localhost", ip = "127.0.0.1" } } }
+                    dnshelper = new dnshelper() { dnss = new dnssAdd[] { new dnssAdd() { host = "localhost", ip = "127.0.0.1" } } }
                 };
             }
         }

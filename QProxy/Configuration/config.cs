@@ -30,6 +30,8 @@ namespace Q.Configuration {
         
         private dnshelper dnshelperField;
         
+        private loggerAdd[] loggerField;
+        
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable=false)]
         public listener[] listeners {
@@ -58,6 +60,17 @@ namespace Q.Configuration {
             }
             set {
                 this.dnshelperField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlArrayItemAttribute("add", IsNullable=false)]
+        public loggerAdd[] logger {
+            get {
+                return this.loggerField;
+            }
+            set {
+                this.loggerField = value;
             }
         }
     }
@@ -242,16 +255,16 @@ namespace Q.Configuration {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="Q.Configuration")]
     public partial class dnshelper {
         
-        private staticA[] staticField;
+        private dnssAdd[] dnssField;
         
         /// <remarks/>
-        [System.Xml.Serialization.XmlArrayItemAttribute("a", IsNullable=false)]
-        public staticA[] @static {
+        [System.Xml.Serialization.XmlArrayItemAttribute("add", IsNullable=false)]
+        public dnssAdd[] dnss {
             get {
-                return this.staticField;
+                return this.dnssField;
             }
             set {
-                this.staticField = value;
+                this.dnssField = value;
             }
         }
     }
@@ -262,7 +275,7 @@ namespace Q.Configuration {
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="Q.Configuration")]
-    public partial class staticA {
+    public partial class dnssAdd {
         
         private string hostField;
         
@@ -406,5 +419,69 @@ namespace Q.Configuration {
         
         /// <remarks/>
         http,
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.17929")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="Q.Configuration")]
+    public partial class loggerAdd {
+        
+        private loggerType typeField;
+        
+        private loggerLevel levelField;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public loggerType type {
+            get {
+                return this.typeField;
+            }
+            set {
+                this.typeField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public loggerLevel level {
+            get {
+                return this.levelField;
+            }
+            set {
+                this.levelField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.17929")]
+    [System.SerializableAttribute()]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="Q.Configuration")]
+    public enum loggerType {
+        
+        /// <remarks/>
+        console,
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.17929")]
+    [System.SerializableAttribute()]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="Q.Configuration")]
+    public enum loggerLevel {
+        
+        /// <remarks/>
+        error,
+        
+        /// <remarks/>
+        warnning,
+        
+        /// <remarks/>
+        info,
+        
+        /// <remarks/>
+        debug,
     }
 }

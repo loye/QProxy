@@ -8,9 +8,9 @@ namespace Q.Proxy.Debug
 {
     public class MultiLogger : Logger
     {
-        public List<Logger> Loggers { get; set; }
+        public IEnumerable<Logger> Loggers { get; set; }
 
-        public MultiLogger(List<Logger> loggers)
+        public MultiLogger(IEnumerable<Logger> loggers)
         {
             if (loggers == null || loggers.Count() == 0)
             {
@@ -19,7 +19,7 @@ namespace Q.Proxy.Debug
             this.Loggers = loggers;
         }
 
-        public override void Message(string message, int level)
+        public override void Message(string message, LogLevel level)
         {
             foreach (var logger in Loggers)
             {

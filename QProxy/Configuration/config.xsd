@@ -6,6 +6,7 @@
         <xs:element name="listeners" type="listeners" maxOccurs="1" />
         <xs:element name="cahelper" type="cahelper" />
         <xs:element name="dnshelper" type="dnshelper" />
+        <xs:element name="logger" type="logger" />
       </xs:sequence>
     </xs:complexType>
   </xs:element>
@@ -61,12 +62,12 @@
 
   <xs:complexType name="dnshelper">
     <xs:sequence>
-      <xs:element name="static" type="static" maxOccurs="1" />
+      <xs:element name="dnss" type="dnss" maxOccurs="1" />
     </xs:sequence>
   </xs:complexType>
-  <xs:complexType name="static">
+  <xs:complexType name="dnss">
     <xs:sequence>
-      <xs:element name="a" maxOccurs="unbounded">
+      <xs:element name="add" maxOccurs="unbounded">
         <xs:complexType >
           <xs:attribute name="host" type="xs:string" use="required" />
           <xs:attribute name="ip" type="xs:string" use="required" />
@@ -75,5 +76,27 @@
     </xs:sequence>
   </xs:complexType>
 
-
+  <xs:complexType name="logger">
+    <xs:sequence>
+      <xs:element name="add" maxOccurs="unbounded">
+        <xs:complexType >
+          <xs:attribute name="type" type="loggerType" use="required" />
+          <xs:attribute name="level" type="loggerLevel" use="required" />
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:simpleType name="loggerType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="console" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="loggerLevel">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="error" />
+      <xs:enumeration value="warnning" />
+      <xs:enumeration value="info" />
+      <xs:enumeration value="debug" />
+    </xs:restriction>
+  </xs:simpleType>
 </xs:schema>

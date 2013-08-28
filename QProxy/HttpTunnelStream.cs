@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using Q.Net;
+using Q.Proxy.Debug;
 
 namespace Q.Proxy
 {
@@ -124,7 +125,7 @@ namespace Q.Proxy
             {
                 throw new Exception(String.Format("Remote Expection: [{0}]\r\n{1}", package.HttpHeader[HttpHeaderCustomKey.Exception].ToString().Trim(), package.HttpContent.ToString()));
             }
-            //Console.WriteLine(package.HttpHeader[HttpHeaderCustomKey.Message]);
+            Logger.Current.Debug(package.HttpHeader[HttpHeaderCustomKey.Message]);
             return package;
         }
 
@@ -187,7 +188,7 @@ namespace Q.Proxy
             this.WriteStream.Write(httpHeader.ToBinary(), 0, httpHeader.Length);
             HttpPackage package = RecievePackage(this.WriteStream);
 
-            Console.WriteLine(package.HttpHeader[HttpHeaderCustomKey.Message] + " [Time: " + (DateTime.Now - time1) + "]");
+            Logger.Current.Debug(package.HttpHeader[HttpHeaderCustomKey.Message] + " [Time: " + (DateTime.Now - time1) + "]");
 
         }
 

@@ -16,7 +16,7 @@ namespace Q.Net
 
         static DnsHelper()
         {
-            foreach (var item in ConfigurationManager.Current.dnshelper.@static)
+            foreach (var item in ConfigurationManager.Current.dnshelper.dnss)
             {
                 IPAddress ip;
                 if (!String.IsNullOrWhiteSpace(item.host) && IPAddress.TryParse(item.ip, out ip))

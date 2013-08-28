@@ -14,14 +14,10 @@ namespace Q.Proxy
 
         public QProxy()
         {
-
-
-            Logger.Instance = new ConsoleLogger();
         }
 
         public void Start()
         {
-
             foreach (var item in ConfigurationManager.Current.listeners)
             {
                 Repeater repeater;
@@ -49,7 +45,10 @@ namespace Q.Proxy
 
         public void Stop()
         {
-
+            foreach (var item in Listeners)
+            {
+                item.Stop();
+            }
         }
     }
 }

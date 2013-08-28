@@ -17,6 +17,9 @@ namespace CMDStarter
     {
         static void Main(string[] args)
         {
+            Console.WindowWidth = 120;
+            Console.WindowHeight = 30;
+
             new QProxy().Start();
 
             while (true)

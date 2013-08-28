@@ -7,13 +7,18 @@ namespace Q.Proxy.Debug
     {
         private static readonly object consoleLocker = new object();
 
-        public override void Message(string message, int level)
+        public ConsoleLogger(LogLevel level = LogLevel.Error)
+            : base(level)
         {
-            if (level >= this.Level)
+        }
+
+        public override void Message(string message, LogLevel level)
+        {
+            if (level <= this.Level)
             {
                 lock (consoleLocker)
                 {
-                    Console.ForegroundColor = level == 1 ? ConsoleColor.Red : (level == 2 ? ConsoleColor.Yellow : ConsoleColor.Gray);
+                    Console.ForegroundColor = level == LogLevel.Error ? ConsoleColor.Red : (level == LogLevel.Warnning ? ConsoleColor.Yellow : ConsoleColor.Gray);
                     Console.WriteLine(message);
                     Console.ForegroundColor = ConsoleColor.Gray;
                 }

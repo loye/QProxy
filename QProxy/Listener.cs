@@ -16,8 +16,6 @@ namespace Q.Proxy
 
         private Repeater m_repeater;
 
-        public IPEndPoint Proxy { get; private set; }
-
         public bool Started { get; private set; }
 
         public Listener(string ip, int port, Repeater repeater)
@@ -40,28 +38,24 @@ namespace Q.Proxy
             Task.Run(new Action(Accept));
             this.Started = true;
 
-            Console.WriteLine(this.ToString());
+            Logger.Current.Info(this.ToString());
+            Logger.Current.Info("Start listening");
             return this;
         }
 
         public Listener Stop()
         {
-            throw new NotImplementedException();
-            //this.Started = false;
-            //return this;
+            this.Started = false;
+            this.m_ListenSocket.Close();
+            Logger.Current.Info("Stopped listening");
+            return this;
         }
 
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("----------------------------------------------------------------------");
-            sb.AppendFormat("Listen Address\t:\t{0}\n", this.m_ListenSocket.LocalEndPoint);
-            sb.AppendFormat("Repeater Type\t:\t{0}\n", m_repeater);
-            if (this.Proxy != null)
-            {
-                sb.AppendFormat("Proxy Address\t:\t{0}\n", this.Proxy);
-            }
-            sb.AppendLine("----------------------------------------------------------------------");
+            sb.AppendFormat("Listen Address\t: {0}\r\n", this.m_ListenSocket.LocalEndPoint);
+            sb.AppendFormat("Repeater\t: {0}\r\n", m_repeater);
             return sb.ToString();
         }
 
@@ -69,9 +63,22 @@ namespace Q.Proxy
         {
             while (this.Started)
             {
-                var clientSocket = this.m_ListenSocket.Accept();
+                Socket clientSocket;
+                try
+                {
+                    clientSocket = this.m_ListenSocket.Accept();
+                }
+                catch (Exception ex)
+                {
+                    if (this.Started)
+                    {
+                        Logger.Current.PublishException(ex);
+                    }
+                    break;
+                }
                 Task.Run(() =>
                 {
+                    Logger.Current.Debug(String.Format("Connected: {0}", clientSocket.LocalEndPoint));
                     using (Stream netStream = new NetworkStream(clientSocket, true))
                     {
                         try
@@ -83,7 +90,7 @@ namespace Q.Proxy
                         }
                         catch (Exception ex)
                         {
-                            Logger.Instance.PublishException(ex);
+                            Logger.Current.PublishException(ex);
                         }
                     }
                 });
