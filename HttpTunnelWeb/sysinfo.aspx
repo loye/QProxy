@@ -777,7 +777,7 @@
         LoadInformation(GetRequestHeaderInfo());
         LoadInformation(GetServerVariables());
         LoadInformation(GetEnvironmentVariables());
-        LoadInformation(GetSessionInfo());
+        //LoadInformation(GetSessionInfo());
         LoadInformation(GetSystemObjectInfo());
         LoadInformation(GetMailObjectInfo());
         LoadInformation(GetUploadObjectInfo());
