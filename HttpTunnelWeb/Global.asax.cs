@@ -9,8 +9,6 @@ namespace Q.Net.Web
         protected void Application_Start(object sender, EventArgs e)
         {
             ThreadPool.SetMinThreads(1024, 1000);
-            int cycle;
-            HttpTunnelNode.Instance.StartCleaner(Int32.TryParse(ConfigurationManager.AppSettings["TunnelTimeout"], out cycle) ? cycle : 600);
         }
 
         protected void Session_Start(object sender, EventArgs e)

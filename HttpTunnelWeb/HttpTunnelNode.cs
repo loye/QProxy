@@ -31,6 +31,8 @@ namespace Q.Net.Web
                         if (m_instance == null)
                         {
                             m_instance = new HttpTunnelNode();
+                            int cycle;
+                            m_instance.StartCleaner(Int32.TryParse(ConfigurationManager.AppSettings["TunnelTimeout"], out cycle) ? cycle : 600); 
                         }
                     }
                 }
@@ -73,7 +75,22 @@ namespace Q.Net.Web
             }
         }
 
-        public void StartCleaner(int cycle)
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            int count = 0;
+            sb.AppendLine("<table>");
+            sb.AppendLine("<tr><td>ID</td><td>Host</td><td>IPEndPoint</td><td>IdelTime(sec)</td></tr>");
+            foreach (var item in tunnelPool)
+            {
+                count++;
+                sb.AppendLine(item.Value.ToString());
+            }
+            sb.AppendLine("</table>");
+            return String.Format("Total Count: {0}<br />{1}", count, count > 0 ? sb.ToString() : null);
+        }
+
+        private void StartCleaner(int cycle)
         {
             Task.Run(() =>
             {
@@ -97,21 +114,6 @@ namespace Q.Net.Web
                     }
                 }
             });
-        }
-
-        public override string ToString()
-        {
-            StringBuilder sb = new StringBuilder();
-            int count = 0;
-            sb.AppendLine("<table>");
-            sb.AppendLine("<tr><td>ID</td><td>Host</td><td>IPEndPoint</td><td>IdelTime(sec)</td></tr>");
-            foreach (var item in tunnelPool)
-            {
-                count++;
-                sb.AppendLine(item.Value.ToString());
-            }
-            sb.AppendLine("</table>");
-            return String.Format("Total Count: {0}<br />{1}", count, count > 0 ? sb.ToString() : null);
         }
 
         private class Tunnel : IDisposable
