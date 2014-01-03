@@ -8,26 +8,19 @@ using Q.Configuration;
 
 namespace Q
 {
-    internal static class CAHelper
+    public static class CAHelper
     {
-        private const string MAKE_CERT_PARAMS_ROOT = "-r -ss root -n \"CN=QProxy, OU=Loye\" -sky signature -cy authority -a sha1 -m 120";
-        private const string MAKE_CERT_PARAMS_END = "-pe -ss my -n \"CN={0}, OU=Loye\" -sky exchange -in \"QProxy\" -is root -cy end -a sha1 -m 120";
-        private const string MAKE_CERT_SUBJECT = "CN={0}, OU=Loye";
-        private const string MAKE_CERT_ROOT_DOMAIN = "QProxy";
+        private const string ROOT_CN = "Q.RootCA";
+        private const string ROOT_OU = "Q";
+        private const string MAKE_CERT_PARAMS_ROOT = "-r -ss root -n \"CN=" + ROOT_CN + ", OU=" + ROOT_OU + "\" -sky signature -cy authority -a sha1 -m 120";
+        private const string MAKE_CERT_PARAMS_END = "-pe -ss my -n \"CN={0}, OU=" + ROOT_OU + "\" -sky exchange -in \"" + ROOT_CN + "\" -is root -cy end -a sha1 -m 120";
+        private const string MAKE_CERT_SUBJECT = "CN={0}, OU=" + ROOT_OU + "";
+        private const string MAKE_CERT_ROOT_DOMAIN = ROOT_CN;
 
-        private static readonly string MAKECERT_FILEPATH = @".\makecert.exe";
+        private static readonly string MAKECERT_FILEPATH = @"makecert.exe";
         private static readonly ConcurrentDictionary<string, X509Certificate2> certificateCache = new ConcurrentDictionary<string, X509Certificate2>();
         private static X509Certificate2 rootCert;
         private static readonly ReaderWriterLockSlim caRWLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
-
-        static CAHelper()
-        {
-            var cahelper = ConfigurationManager.Current.cahelper ?? ConfigurationManager.Default.cahelper;
-            if (cahelper != null && cahelper.makecert != null && !String.IsNullOrWhiteSpace(cahelper.makecert.path))
-            {
-                MAKECERT_FILEPATH = cahelper.makecert.path;
-            }
-        }
 
         public static X509Certificate2 GetCertificate(string host)
         {

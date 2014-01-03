@@ -98,6 +98,7 @@ namespace Q.Proxy.Debug
         }
     }
 
+
     public class DefaultLogger : Logger
     {
         public override void Message(string message, LogLevel level)

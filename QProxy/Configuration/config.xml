@@ -9,13 +9,10 @@
       <!--<proxy type="socks" host="127.0.0.1" port="2000"/>-->
     </listener>
   </listeners>
-  <cahelper>
-    <makecert path=".\makecert.exe" downloadUrl="http://localhost:1008/makecert"></makecert>
-  </cahelper>
   <dnshelper>
-    <dnss>
+    <hosts>
       <add host="localhost" ip="127.0.0.1" />
-    </dnss>
+    </hosts>
   </dnshelper>
   <logger>
     <add type="console" level="debug"/>
