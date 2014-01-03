@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QProxy", "QProxy\QProxy.csproj", "{C07CA157-FEAA-4CE4-AF80-B489E318553D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMDStarter", "CMDStarter\CMDStarter.csproj", "{3A1FBDCE-14C9-4E94-B64B-BF324A70534F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpTunnelWeb", "HttpTunnelWeb\HttpTunnelWeb.csproj", "{D2D7D8E5-A239-41DC-9CD8-E4EFAD8539D0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebServer", "WebServer\WebServer.csproj", "{46954A78-B18A-4202-AF7C-FAA3D2752807}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,10 +23,10 @@ Global
 		{3A1FBDCE-14C9-4E94-B64B-BF324A70534F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3A1FBDCE-14C9-4E94-B64B-BF324A70534F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3A1FBDCE-14C9-4E94-B64B-BF324A70534F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D2D7D8E5-A239-41DC-9CD8-E4EFAD8539D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D2D7D8E5-A239-41DC-9CD8-E4EFAD8539D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D2D7D8E5-A239-41DC-9CD8-E4EFAD8539D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D2D7D8E5-A239-41DC-9CD8-E4EFAD8539D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46954A78-B18A-4202-AF7C-FAA3D2752807}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46954A78-B18A-4202-AF7C-FAA3D2752807}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46954A78-B18A-4202-AF7C-FAA3D2752807}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46954A78-B18A-4202-AF7C-FAA3D2752807}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

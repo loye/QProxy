@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Configuration;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -18,7 +17,10 @@ namespace Q.Net.Web
 
         private static object locker = new object();
 
-        private HttpTunnelNode() { }
+        private HttpTunnelNode()
+        {
+            StartCleaner();
+        }
 
         public static HttpTunnelNode Instance
         {
@@ -31,8 +33,6 @@ namespace Q.Net.Web
                         if (m_instance == null)
                         {
                             m_instance = new HttpTunnelNode();
-                            int cycle;
-                            m_instance.StartCleaner(Int32.TryParse(ConfigurationManager.AppSettings["TunnelTimeout"], out cycle) ? cycle : 600); 
                         }
                     }
                 }
@@ -90,17 +90,16 @@ namespace Q.Net.Web
             return String.Format("Total Count: {0}<br />{1}", count, count > 0 ? sb.ToString() : null);
         }
 
-        private void StartCleaner(int cycle)
+        private void StartCleaner()
         {
             Task.Run(() =>
             {
-                int timeout;
-                TimeSpan timeoutSpan = new TimeSpan(0, 0, Int32.TryParse(ConfigurationManager.AppSettings["TunnelTimeout"], out timeout) ? timeout : 600);
+                TimeSpan timeoutSpan = new TimeSpan(0, 0, 600);
                 while (true)
                 {
                     try
                     {
-                        Thread.Sleep(cycle * 1000);
+                        Thread.Sleep(600000);
                         foreach (var item in tunnelPool)
                         {
                             if (item.Value.IdelTime > timeoutSpan)
