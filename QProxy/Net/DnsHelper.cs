@@ -3,25 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text.RegularExpressions;
-using Q.Configuration;
 
 namespace Q.Net
 {
     public static class DnsHelper
     {
-        private static readonly Regex HOSTS_REGEX = new Regex(@"(?<ip>\d+\.\d+\.\d+\.\d+)[ \t]+(?<host>[^ \t\r\n]+)", RegexOptions.Compiled);
-
         private static Dictionary<string, IPAddress> hosts = new Dictionary<string, IPAddress>();
 
-        static DnsHelper()
+        public static void AppendHosts(Dictionary<string, IPAddress> hosts)
         {
-            foreach (var item in ConfigurationManager.Current.dnshelper.dnss)
+            foreach (var item in hosts)
             {
-                IPAddress ip;
-                if (!String.IsNullOrWhiteSpace(item.host) && IPAddress.TryParse(item.ip, out ip))
+                if (item.Key != null && item.Value != null)
                 {
-                    hosts.Add(item.host, ip);
+                    DnsHelper.hosts[item.Key] = item.Value;
                 }
             }
         }
